@@ -8,4 +8,10 @@ import java.util.List;
 @Mapper
 public interface UserMapper {
     List<User> findAll();
+
+    User findByPhoneOrEmail(String account);
+
+    int insert(User user);
+
+    int updateById(User user);
 }

@@ -6,7 +6,21 @@
 <mapper namespace="com.sixspirits.xianshiji.mapper.UserMapper">
 
   <select id="findAll" resultType="com.sixspirits.xianshiji.entity.User">
-    SELECT id, username FROM user
+    SELECT id, phone, email, password, nickname, avatar_url as avatarUrl, status, created_at as createdAt, updated_at as updatedAt FROM `user`
   </select>
+
+  <select id="findByPhoneOrEmail" resultType="com.sixspirits.xianshiji.entity.User">
+    SELECT id, phone, email, password, nickname, avatar_url as avatarUrl, status, created_at as createdAt, updated_at as updatedAt FROM `user` WHERE phone = #{account} OR email = #{account}
+  </select>
+
+  <insert id="insert">
+    INSERT INTO `user` (phone, email, password, nickname, avatar_url, status, created_at, updated_at)
+    VALUES (#{phone}, #{email}, #{password}, #{nickname}, #{avatarUrl}, #{status}, #{createdAt}, #{updatedAt})
+  </insert>
+
+  <update id="updateById">
+    UPDATE `user` SET phone = #{phone}, email = #{email}, password = #{password}, nickname = #{nickname}, avatar_url = #{avatarUrl}, status = #{status}, updated_at = #{updatedAt}
+    WHERE id = #{id}
+  </update>
 
 </mapper>
