@@ -1,0 +1,89 @@
+# ================================
+# 前端相关忽略规则 (React)
+# ================================
+frontend/node_modules/
+frontend/.DS_Store
+frontend/build/
+frontend/.env
+frontend/.env.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.eslintcache
+frontend/coverage/
+
+# ================================
+# Spring Boot 后端忽略规则
+# ================================
+# Maven
+backend/target/
+backend/pom.xml.tag
+backend/pom.xml.releaseBackup
+backend/pom.xml.versionsBackup
+backend/pom.xml.next
+backend/release.properties
+backend/dependency-reduced-pom.xml
+
+# 编译输出
+backend/.classpath
+backend/.project
+backend/.settings/
+backend/.factorypath
+backend/bin/
+backend/*.jar
+backend/*.war
+backend/*.ear
+backend/*.zip
+backend/*.tar.gz
+
+# 日志文件
+backend/*.log
+backend/logs/
+
+# 运行时数据
+backend/run/
+backend/.springBeans
+
+# IDE
+backend/.idea/
+backend/*.iml
+backend/*.iws
+
+# 数据库和配置文件（根据需要调整）
+backend/*.db
+backend/*.sqlite
+backend/application-dev.properties
+backend/application-dev.yml
+
+# ================================
+# 通用忽略规则
+# ================================
+.DS_Store
+Thumbs.db
+*.log
+*.bak
+
+# 系统文件
+Desktop.ini
+
+# 编辑器/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-*
+
+# 环境变量文件
+.env
+.env.local
+.env.*.local
+
+# 临时文件
+*.tmp
+*.temp
+
+# 文档
+*.doc
+*.docx
+*.pdf
