@@ -64,7 +64,7 @@ export default function HomeScreen() {
   return (
     <ThemedView style={styles.container}>
       <LinearGradient
-        colors={['#4CAF50', '#E8F5E9']}
+        colors={['#769678', '#E9EDEB']}
         style={styles.headerGradient}
       >
         <ThemedText type="title" style={styles.headerTitle}>首页</ThemedText>
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#E9EDEB', // RGB(233,237,235)
     padding: 20,
   },
   title: {

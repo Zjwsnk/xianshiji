@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sixspirits.xianshiji.mapper.FoodItemMapper">
+
+  <select id="findByUserId" resultType="com.sixspirits.xianshiji.entity.FoodItem">
+    SELECT id, user_id as userId, family_id as familyId, name, category, barcode,
+           quantity, unit, min_quantity as minQuantity, purchase_date as purchaseDate, expiry_date as expiryDate,
+           image_url as imageUrl, status, is_deleted as isDeleted,
+           created_at as createdAt, updated_at as updatedAt
+    FROM food_item
+    WHERE user_id = #{userId} AND is_deleted = 0
+    ORDER BY created_at DESC
+  </select>
+
+  <select id="findByUserIdAndCategory" resultType="com.sixspirits.xianshiji.entity.FoodItem">
+    SELECT id, user_id as userId, family_id as familyId, name, category, barcode,
+           quantity, unit, min_quantity as minQuantity, purchase_date as purchaseDate, expiry_date as expiryDate,
+           image_url as imageUrl, status, is_deleted as isDeleted,
+           created_at as createdAt, updated_at as updatedAt
+    FROM food_item
+    WHERE user_id = #{userId} AND category = #{category} AND is_deleted = 0
+    ORDER BY created_at DESC
+  </select>
+
+  <select id="findByUserIdAndKeyword" resultType="com.sixspirits.xianshiji.entity.FoodItem">
+    SELECT id, user_id as userId, family_id as familyId, name, category, barcode,
+           quantity, unit, min_quantity as minQuantity, purchase_date as purchaseDate, expiry_date as expiryDate,
+           image_url as imageUrl, status, is_deleted as isDeleted,
+           created_at as createdAt, updated_at as updatedAt
+    FROM food_item
+    WHERE user_id = #{userId} AND is_deleted = 0
+    AND (name LIKE CONCAT('%', #{keyword}, '%') OR category LIKE CONCAT('%', #{keyword}, '%'))
+    ORDER BY created_at DESC
+  </select>
+
+  <select id="findById" resultType="com.sixspirits.xianshiji.entity.FoodItem">
+    SELECT id, user_id as userId, family_id as familyId, name, category, barcode,
+           quantity, unit, min_quantity as minQuantity, purchase_date as purchaseDate, expiry_date as expiryDate,
+           image_url as imageUrl, status, is_deleted as isDeleted,
+           created_at as createdAt, updated_at as updatedAt
+    FROM food_item
+    WHERE id = #{id} AND is_deleted = 0
+  </select>
+
+  <insert id="insert">
+    INSERT INTO food_item (user_id, family_id, name, category, barcode, quantity, unit, min_quantity,
+                          purchase_date, expiry_date, image_url, status, is_deleted, created_at, updated_at)
+    VALUES (#{userId}, #{familyId}, #{name}, #{category}, #{barcode}, #{quantity}, #{unit}, #{minQuantity},
+            #{purchaseDate}, #{expiryDate}, #{imageUrl}, #{status}, #{isDeleted}, #{createdAt}, #{updatedAt})
+  </insert>
+
+  <update id="updateById">
+    UPDATE food_item SET
+      user_id = #{userId}, family_id = #{familyId}, name = #{name}, category = #{category},
+      barcode = #{barcode}, quantity = #{quantity}, unit = #{unit}, min_quantity = #{minQuantity},
+      purchase_date = #{purchaseDate}, expiry_date = #{expiryDate}, image_url = #{imageUrl},
+      status = #{status}, is_deleted = #{isDeleted}, updated_at = #{updatedAt}
+    WHERE id = #{id}
+  </update>
+
+  <update id="softDeleteById">
+    UPDATE food_item SET is_deleted = 1, updated_at = NOW() WHERE id = #{id}
+  </update>
+
+</mapper>

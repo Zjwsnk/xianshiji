@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sixspirits.xianshiji.mapper.FamilyMapper">
+
+  <!-- 家庭组相关 -->
+  <select id="findByInviteCode" resultType="com.sixspirits.xianshiji.entity.Family">
+    SELECT id, name, invite_code as inviteCode, created_by as createdBy, created_at as createdAt FROM family WHERE invite_code = #{inviteCode}
+  </select>
+
+  <insert id="insertFamily">
+    INSERT INTO family (name, invite_code, created_by, created_at)
+    VALUES (#{name}, #{inviteCode}, #{createdBy}, #{createdAt})
+  </insert>
+
+  <select id="findUserFamilies" resultType="com.sixspirits.xianshiji.entity.Family">
+    SELECT f.id, f.name, f.invite_code as inviteCode, f.created_by as createdBy, f.created_at as createdAt
+    FROM family f
+    JOIN user_family uf ON f.id = uf.family_id
+    WHERE uf.user_id = #{userId}
+  </select>
+
+  <!-- 用户-家庭组关联相关 -->
+  <insert id="insertUserFamily">
+    INSERT INTO user_family (user_id, family_id, role, joined_at)
+    VALUES (#{userId}, #{familyId}, #{role}, #{joinedAt})
+  </insert>
+
+  <select id="findUserFamily" resultType="com.sixspirits.xianshiji.entity.UserFamily">
+    SELECT id, user_id as userId, family_id as familyId, role, joined_at as joinedAt FROM user_family
+    WHERE user_id = #{userId} AND family_id = #{familyId}
+  </select>
+
+</mapper>

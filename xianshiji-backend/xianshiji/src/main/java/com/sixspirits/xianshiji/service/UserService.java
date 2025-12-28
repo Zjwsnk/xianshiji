@@ -48,4 +48,41 @@ public class UserService {
         userMapper.updateById(user);
         return user;
     }
+
+    public User updateUser(Long userId, String nickname, String phone, String email, String oldPassword,
+            String newPassword) {
+        User user = userMapper.findById(userId);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+
+        // 如果要修改密码，需要验证旧密码
+        if (newPassword != null && !newPassword.trim().isEmpty()) {
+            if (oldPassword == null || !oldPassword.equals(user.getPassword())) {
+                throw new RuntimeException("当前密码错误");
+            }
+            user.setPassword(newPassword);
+        }
+
+        user.setNickname(nickname);
+        user.setPhone(phone);
+        user.setEmail(email);
+        user.setUpdatedAt(LocalDateTime.now());
+
+        userMapper.updateById(user);
+        return user;
+    }
+
+    public void updateAvatar(Long userId, String avatarUrl) {
+        User user = userMapper.findById(userId);
+        if (user != null) {
+            user.setAvatarUrl(avatarUrl);
+            user.setUpdatedAt(LocalDateTime.now());
+            userMapper.updateById(user);
+        }
+    }
+
+    public User findById(Long userId) {
+        return userMapper.findById(userId);
+    }
 }

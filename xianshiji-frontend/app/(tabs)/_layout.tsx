@@ -15,13 +15,16 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
         tabBarButton: HapticTab,
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF', // Normal white
+        },
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: '首页',
           tabBarIcon: ({ color, focused }) => (
-            <Feather name="home" size={28} color={focused ? '#4CAF50' : color} />
+            <Feather name="home" size={28} color={focused ? '#769678' : color} />
           ),
         }}
       />
@@ -30,7 +33,7 @@ export default function TabLayout() {
         options={{
           title: '统计',
           tabBarIcon: ({ color, focused }) => (
-            <Feather name="bar-chart-2" size={28} color={focused ? '#4CAF50' : color} />
+            <Feather name="bar-chart-2" size={28} color={focused ? '#769678' : color} />
           ),
         }}
       />
@@ -39,7 +42,7 @@ export default function TabLayout() {
         options={{
           title: '消息',
           tabBarIcon: ({ color, focused }) => (
-            <Feather name="message-circle" size={28} color={focused ? '#4CAF50' : color} />
+            <Feather name="message-circle" size={28} color={focused ? '#769678' : color} />
           ),
         }}
       />
@@ -48,7 +51,7 @@ export default function TabLayout() {
         options={{
           title: '我的',
           tabBarIcon: ({ color, focused }) => (
-            <Feather name="user" size={28} color={focused ? '#4CAF50' : color} />
+            <Feather name="user" size={28} color={focused ? '#769678' : color} />
           ),
         }}
       />

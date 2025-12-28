@@ -18,6 +18,8 @@ public class FoodItem {
     private BigDecimal quantity;
     private String unit;
 
+    private BigDecimal minQuantity;
+
     private LocalDate purchaseDate;
     private LocalDate expiryDate;
 
@@ -100,6 +102,14 @@ public class FoodItem {
 
     public void setUnit(String unit) {
         this.unit = unit;
+    }
+
+    public BigDecimal getMinQuantity() {
+        return minQuantity;
+    }
+
+    public void setMinQuantity(BigDecimal minQuantity) {
+        this.minQuantity = minQuantity;
     }
 
     public LocalDate getPurchaseDate() {

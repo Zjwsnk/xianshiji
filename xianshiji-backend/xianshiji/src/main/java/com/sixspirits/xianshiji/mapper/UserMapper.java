@@ -11,6 +11,8 @@ public interface UserMapper {
 
     User findByPhoneOrEmail(String account);
 
+    User findById(Long id);
+
     int insert(User user);
 
     int updateById(User user);

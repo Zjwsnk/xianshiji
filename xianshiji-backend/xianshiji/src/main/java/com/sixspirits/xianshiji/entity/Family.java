@@ -51,4 +51,15 @@ public class Family {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    @Override
+    public String toString() {
+        return "Family{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", inviteCode='" + inviteCode + '\'' +
+                ", createdBy=" + createdBy +
+                ", createdAt=" + createdAt +
+                '}';
+    }
 }
