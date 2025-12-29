@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { apiUrl } from '@/constants/api';
@@ -22,24 +22,31 @@ export default function AccountScreen() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
+    const loadUser = async () => {
+        const userData = await AsyncStorage.getItem('user');
+        if (userData) {
+            const parsedUser = JSON.parse(userData);
+            setUser(parsedUser);
+            setForm({
+                nickname: parsedUser.nickname || '',
+                phone: parsedUser.phone || '',
+                email: parsedUser.email || '',
+                oldPassword: '',
+                newPassword: '',
+                confirmPassword: ''
+            });
+        }
+    };
+
     useEffect(() => {
-        const loadUser = async () => {
-            const userData = await AsyncStorage.getItem('user');
-            if (userData) {
-                const parsedUser = JSON.parse(userData);
-                setUser(parsedUser);
-                setForm({
-                    nickname: parsedUser.nickname || '',
-                    phone: parsedUser.phone || '',
-                    email: parsedUser.email || '',
-                    oldPassword: '',
-                    newPassword: '',
-                    confirmPassword: ''
-                });
-            }
-        };
         loadUser();
     }, []);
+
+    useFocusEffect(
+        React.useCallback(() => {
+            loadUser();
+        }, [])
+    );
 
     const handleChange = (field: string, value: string) => {
         setForm({ ...form, [field]: value });

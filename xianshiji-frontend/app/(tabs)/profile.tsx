@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, TextInput, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, TextInput, Modal, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { apiUrl } from '@/constants/api';
 
 export default function ProfileScreen() {
     const [user, setUser] = useState<any>(null);
@@ -15,15 +16,22 @@ export default function ProfileScreen() {
     const [inviteCode, setInviteCode] = useState('');
     const router = useRouter();
 
+    const loadUser = async () => {
+        const userData = await AsyncStorage.getItem('user');
+        if (userData) {
+            setUser(JSON.parse(userData));
+        }
+    };
+
     useEffect(() => {
-        const loadUser = async () => {
-            const userData = await AsyncStorage.getItem('user');
-            if (userData) {
-                setUser(JSON.parse(userData));
-            }
-        };
         loadUser();
     }, []);
+
+    useFocusEffect(
+        React.useCallback(() => {
+            loadUser();
+        }, [])
+    );
 
     const handleLogout = async () => {
         Alert.alert('确认退出', '确定要退出登录吗？', [
@@ -80,7 +88,14 @@ export default function ProfileScreen() {
             >
                 <View style={styles.userCard}>
                     <View style={styles.avatarContainer}>
-                        <Feather name="user" size={50} color="#fff" />
+                        {user?.avatarUrl ? (
+                            <Image
+                                source={{ uri: apiUrl(user.avatarUrl) }}
+                                style={styles.avatarImage}
+                            />
+                        ) : (
+                            <Feather name="user" size={50} color="#fff" />
+                        )}
                     </View>
                     <View style={styles.userDetails}>
                         <Text style={styles.userName}>{user?.nickname || '未登录'}</Text>
@@ -89,15 +104,15 @@ export default function ProfileScreen() {
                 </View>
             </LinearGradient>
             <View style={styles.content}>
-                <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/account' as any)}>
+                <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/account')}>
                     <Feather name="user" size={24} color="#769678" />
                     <Text style={styles.menuText}>我的账户</Text>
                     <Feather name="chevron-right" size={20} color="#ccc" />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/food-settings' as any)}>
+                <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/food-settings')}>
                     <Feather name="settings" size={24} color="#769678" />
-                    <Text style={styles.menuText}>食材设置</Text>
+                    <Text style={styles.menuText}>食物设置</Text>
                     <Feather name="chevron-right" size={20} color="#ccc" />
                 </TouchableOpacity>
 
@@ -184,6 +199,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 15,
+    },
+    avatarImage: {
+        width: 70,
+        height: 70,
+        borderRadius: 35,
     },
     userDetails: {
         flex: 1,

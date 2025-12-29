@@ -64,9 +64,18 @@ public class UserService {
             user.setPassword(newPassword);
         }
 
+        // 检查邮箱是否已被其他用户使用
+        String finalEmail = (email != null && !email.trim().isEmpty()) ? email : null;
+        if (finalEmail != null && !finalEmail.equals(user.getEmail())) {
+            User existingUser = userMapper.findByPhoneOrEmail(finalEmail);
+            if (existingUser != null && !existingUser.getId().equals(userId)) {
+                throw new RuntimeException("该邮箱已被其他用户使用");
+            }
+        }
+
         user.setNickname(nickname);
         user.setPhone(phone);
-        user.setEmail(email);
+        user.setEmail(finalEmail);
         user.setUpdatedAt(LocalDateTime.now());
 
         userMapper.updateById(user);
