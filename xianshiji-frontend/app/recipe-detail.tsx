@@ -1,0 +1,321 @@
+import React, { useState, useEffect, useLayoutEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
+import { Feather } from '@expo/vector-icons';
+import { apiUrl } from '@/constants/api';
+
+interface Recipe {
+    id: number;
+    name: string;
+    image_url?: string;
+    cuisine_type: string;
+    description?: string;
+    steps?: string;
+    prep_time?: number;
+    cook_time?: number;
+    difficulty?: string;
+    servings?: number;
+}
+
+interface RecipeIngredient {
+    id: number;
+    recipe_id: number;
+    ingredient_name: string;
+    amount?: string;
+}
+
+export default function RecipeDetailScreen() {
+    const { id } = useLocalSearchParams();
+    const router = useRouter();
+    const navigation = useNavigation();
+    const [recipe, setRecipe] = useState<Recipe | null>(null);
+    const [ingredients, setIngredients] = useState<RecipeIngredient[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // 设置导航栏标题
+    useLayoutEffect(() => {
+        navigation.setOptions({
+            headerTitle: '食谱详情',
+        });
+    }, [navigation]);
+
+    // 加载食谱详情数据
+    useEffect(() => {
+        if (!id) return;
+        
+        const loadRecipeDetail = async () => {
+            try {
+                // 加载食谱基本信息
+                const recipeUrl = apiUrl(`/recipes/${id}`);
+                const recipeResponse = await fetch(recipeUrl);
+                const recipeData = await recipeResponse.json();
+                
+                if (recipeData.success) {
+                    setRecipe(recipeData.data);
+                }
+
+                // 加载食谱配料信息
+                const ingredientsUrl = apiUrl(`/recipes/${id}/ingredients`);
+                const ingredientsResponse = await fetch(ingredientsUrl);
+                const ingredientsData = await ingredientsResponse.json();
+                
+                if (ingredientsData.success) {
+                    setIngredients(ingredientsData.data);
+                }
+            } catch (error) {
+                console.error('加载食谱详情失败:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadRecipeDetail();
+    }, [id]);
+
+    if (loading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>加载中...</Text>
+            </View>
+        );
+    }
+
+    if (!recipe) {
+        return (
+            <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>食谱不存在或已删除</Text>
+            </View>
+        );
+    }
+
+    return (
+        <ScrollView style={styles.container}>
+            {/* 食谱图片 */}
+            <View style={styles.imageContainer}>
+                {recipe.image_url ? (
+                    <Image 
+                        source={{ uri: recipe.image_url }} 
+                        style={styles.recipeImage} 
+                        resizeMode="cover"
+                    />
+                ) : (
+                    <View style={styles.placeholderImage}>
+                        <Feather name="image" size={60} color="#ddd" />
+                    </View>
+                )}
+            </View>
+
+            {/* 食谱基本信息 */}
+            <View style={styles.infoContainer}>
+                <Text style={styles.recipeName}>{recipe.name}</Text>
+                <View style={styles.metaContainer}>
+                    <View style={styles.metaItem}>
+                        <Feather name="book" size={16} color="#666" />
+                        <Text style={styles.metaText}>{recipe.cuisine_type}</Text>
+                    </View>
+                    {recipe.prep_time && (
+                        <View style={styles.metaItem}>
+                            <Feather name="clock" size={16} color="#666" />
+                            <Text style={styles.metaText}>准备 {recipe.prep_time} 分钟</Text>
+                        </View>
+                    )}
+                    {recipe.cook_time && (
+                        <View style={styles.metaItem}>
+                            <Feather name="coffee" size={16} color="#666" />
+                            <Text style={styles.metaText}>烹饪 {recipe.cook_time} 分钟</Text>
+                        </View>
+                    )}
+                    {recipe.servings && (
+                        <View style={styles.metaItem}>
+                            <Feather name="users" size={16} color="#666" />
+                            <Text style={styles.metaText}>{recipe.servings} 人份</Text>
+                        </View>
+                    )}
+                    {recipe.difficulty && (
+                        <View style={styles.metaItem}>
+                            <Feather name="star" size={16} color="#666" />
+                            <Text style={styles.metaText}>
+                                {recipe.difficulty === 'BEGINNER' ? '简单' : 
+                                 recipe.difficulty === 'INTERMEDIATE' ? '中等' : '困难'}
+                            </Text>
+                        </View>
+                    )}
+                </View>
+            </View>
+
+            {/* 食谱描述 */}
+            {recipe.description && (
+                <View style={styles.sectionContainer}>
+                    <Text style={styles.sectionTitle}>描述</Text>
+                    <Text style={styles.descriptionText}>{recipe.description}</Text>
+                </View>
+            )}
+
+            {/* 配料列表 */}
+            {ingredients.length > 0 && (
+                <View style={styles.sectionContainer}>
+                    <Text style={styles.sectionTitle}>配料</Text>
+                    <View style={styles.ingredientsList}>
+                        {ingredients.map((ingredient) => (
+                            <View key={ingredient.id} style={styles.ingredientItem}>
+                                <Feather name="check-circle" size={16} color="#769678" />
+                                <Text style={styles.ingredientText}>
+                                    {ingredient.ingredient_name} {ingredient.amount}
+                                </Text>
+                            </View>
+                        ))}
+                    </View>
+                </View>
+            )}
+
+            {/* 烹饪步骤 */}
+            {recipe.steps && (
+                <View style={styles.sectionContainer}>
+                    <Text style={styles.sectionTitle}>烹饪步骤</Text>
+                    <View style={styles.stepsContainer}>
+                        {recipe.steps.split('\n').map((step, index) => (
+                            <View key={index} style={styles.stepItem}>
+                                <View style={styles.stepNumber}>
+                                    <Text style={styles.stepNumberText}>{index + 1}</Text>
+                                </View>
+                                <Text style={styles.stepText}>{step}</Text>
+                            </View>
+                        ))}
+                    </View>
+                </View>
+            )}
+        </ScrollView>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        fontSize: 16,
+        color: '#666',
+    },
+    errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    errorText: {
+        fontSize: 16,
+        color: '#ff4444',
+        textAlign: 'center',
+    },
+    imageContainer: {
+        width: '100%',
+        height: 250,
+        backgroundColor: '#f0f0f0',
+    },
+    recipeImage: {
+        width: '100%',
+        height: '100%',
+    },
+    placeholderImage: {
+        width: '100%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f0f0f0',
+    },
+    infoContainer: {
+        padding: 20,
+        backgroundColor: '#fff',
+    },
+    recipeName: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 12,
+    },
+    metaContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 12,
+    },
+    metaItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: '#f5f5f5',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 12,
+    },
+    metaText: {
+        fontSize: 12,
+        color: '#666',
+    },
+    sectionContainer: {
+        padding: 20,
+        backgroundColor: '#fff',
+        borderTopWidth: 1,
+        borderTopColor: '#f0f0f0',
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 12,
+    },
+    descriptionText: {
+        fontSize: 14,
+        color: '#666',
+        lineHeight: 20,
+    },
+    ingredientsList: {
+        gap: 8,
+    },
+    ingredientItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        backgroundColor: '#f9f9f9',
+        padding: 10,
+        borderRadius: 8,
+    },
+    ingredientText: {
+        fontSize: 14,
+        color: '#333',
+        flex: 1,
+    },
+    stepsContainer: {
+        gap: 16,
+    },
+    stepItem: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    stepNumber: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: '#769678',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexShrink: 0,
+    },
+    stepNumberText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    stepText: {
+        flex: 1,
+        fontSize: 14,
+        color: '#333',
+        lineHeight: 20,
+    },
+});

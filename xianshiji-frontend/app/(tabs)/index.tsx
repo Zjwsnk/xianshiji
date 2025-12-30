@@ -1,20 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, Alert } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-
-const sampleFoods = [
-  { id: '1', name: '苹果', category: '水果', quantity: 5, expiryDays: 7, status: '临期' },
-  { id: '2', name: '牛奶', category: '乳制品', quantity: 2, expiryDays: 3, status: '即将过期' },
-  { id: '3', name: '鸡蛋', category: '蛋类', quantity: 12, expiryDays: 14, status: '新鲜' },
-];
+import { Feather } from '@expo/vector-icons';
 
 export default function HomeScreen() {
-  const [searchText, setSearchText] = useState('');
-  const [foods, setFoods] = useState(sampleFoods);
   const router = useRouter();
 
   useEffect(() => {
@@ -27,75 +20,53 @@ export default function HomeScreen() {
     checkAuth();
   }, [router]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case '新鲜': return '#4CAF50';
-      case '临期': return '#FFC107';
-      case '即将过期': return '#FF9800';
-      case '已过期': return '#F44336';
-      default: return '#666';
-    }
-  };
-
-  const renderFoodItem = ({ item }: any) => (
-    <View style={styles.foodCard}>
-      <View style={styles.foodInfo}>
-        <Text style={styles.foodName}>{item.name}</Text>
-        <Text style={styles.foodCategory}>{item.category}</Text>
-        <Text style={styles.foodQuantity}>数量: {item.quantity}</Text>
-        <Text style={styles.foodExpiry}>保质期: {item.expiryDays}天</Text>
-      </View>
-      <View style={styles.foodActions}>
-        <Text style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-          {item.status}
-        </Text>
-        <TouchableOpacity style={styles.consumeButton}>
-          <Text style={styles.buttonText}>消耗</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
-  const filteredFoods = foods.filter(food =>
-    food.name.toLowerCase().includes(searchText.toLowerCase()) ||
-    food.category.toLowerCase().includes(searchText.toLowerCase())
-  );
-
   return (
     <ThemedView style={styles.container}>
       <LinearGradient
         colors={['#769678', '#E9EDEB']}
         style={styles.headerGradient}
       >
-        <ThemedText type="title" style={styles.headerTitle}>首页</ThemedText>
+        <View style={styles.headerContainer}>
+          <ThemedText type="title" style={styles.headerTitle}>首页</ThemedText>
+        </View>
       </LinearGradient>
       <View style={styles.content}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="搜索食材或分类..."
-          value={searchText}
-          onChangeText={setSearchText}
+        <Image 
+          source={{ uri: 'https://images.unsplash.com/photo-1574291693613-62a8a4499780?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80' }} 
+          style={styles.mainImage} 
+          resizeMode="cover"
         />
-        <View style={styles.categoryButtons}>
-          <TouchableOpacity style={styles.categoryButton}>
-            <Text style={styles.categoryText}>全部</Text>
+        {/* 食材扫码录入按钮 */}
+        <TouchableOpacity 
+          style={styles.scanButton} 
+          onPress={() => router.push('/scan' as any)}
+        >
+          <View style={{flexDirection: 'row', alignItems: 'center'}}>
+            <Feather name="maximize" size={24} color="#1e2120ff" />
+            <ThemedText style={styles.scanButtonText}>食材扫码录入</ThemedText>
+          </View>
+        </TouchableOpacity>
+        {/* 手动录入和食材菜谱按钮 */}
+        <View style={styles.twoButtonsContainer}>
+          <TouchableOpacity 
+            style={styles.squareButton} 
+            onPress={() => router.push('/manual-add' as any)}
+          >
+          <View style={styles.buttonContentColumn}>
+            <Feather name="edit-3" size={32} color="#fff" />
+            <ThemedText style={styles.squareButtonText}>手动录入</ThemedText>
+          </View>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.categoryButton}>
-            <Text style={styles.categoryText}>水果</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.categoryButton}>
-            <Text style={styles.categoryText}>蔬菜</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.categoryButton}>
-            <Text style={styles.categoryText}>肉类</Text>
+          <TouchableOpacity 
+            style={styles.squareButton} 
+            onPress={() => router.push('/recipes' as any)}
+            >
+            <View style={styles.buttonContentColumn}>
+              <Feather name="book-open" size={32} color="#fff" />
+              <ThemedText style={styles.squareButtonText}>食材菜谱</ThemedText>
+            </View>
           </TouchableOpacity>
         </View>
-        <FlatList
-          data={filteredFoods}
-          renderItem={renderFoodItem}
-          keyExtractor={(item) => item.id}
-          style={styles.list}
-        />
       </View>
     </ThemedView>
   );
@@ -107,105 +78,70 @@ const styles = StyleSheet.create({
   },
   headerGradient: {
     height: 120,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
+    paddingTop: 30,
   },
   headerTitle: {
     color: '#fff',
     fontSize: 24,
     fontWeight: 'bold',
   },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    paddingHorizontal: 20,
+  },
   content: {
     flex: 1,
-    backgroundColor: '#E9EDEB', // RGB(233,237,235)
+    backgroundColor: '#E9EDEB',
     padding: 20,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
   },
-  title: {
-    fontSize: 24,
+  mainImage: {
+    width: '100%',
+    height: '60%',
+    borderRadius: 10,
     marginBottom: 20,
-    color: '#4CAF50',
-    textAlign: 'center',
   },
-  searchInput: {
-    height: 40,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    marginBottom: 15,
-    backgroundColor: '#fff',
+  scanButton: {
+    width: '100%',
+    height: 50,
+    backgroundColor: '#9fc7b3ff',
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  buttonContentColumn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scanButtonText: {
+    color: '#1e2120ff',
     fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 10,
   },
-  categoryButtons: {
-    flexDirection: 'row',
-    marginBottom: 15,
-  },
-  categoryButton: {
-    backgroundColor: '#E8F5E8',
-    padding: 8,
-    borderRadius: 5,
-    marginRight: 10,
-  },
-  categoryText: {
-    color: '#4CAF50',
-    fontSize: 14,
-  },
-  list: {
-    flex: 1,
-  },
-  foodCard: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+  twoButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    width: '100%',
+  },
+  squareButton: {
+    width: '48%',
+    height: 120,
+    backgroundColor: '#6C9776',
+    borderRadius: 15,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  foodInfo: {
-    flex: 1,
-  },
-  foodName: {
-    fontSize: 18,
+  squareButtonText: {
+    color: '#fff',
+    fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  foodCategory: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 2,
-  },
-  foodQuantity: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 2,
-  },
-  foodExpiry: {
-    fontSize: 14,
-    color: '#666',
-  },
-  foodActions: {
-    alignItems: 'center',
-  },
-  statusBadge: {
-    color: '#fff',
-    padding: 4,
-    borderRadius: 4,
-    fontSize: 12,
-    marginBottom: 8,
-  },
-  consumeButton: {
-    backgroundColor: '#4CAF50',
-    padding: 6,
-    borderRadius: 4,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 12,
   },
 });

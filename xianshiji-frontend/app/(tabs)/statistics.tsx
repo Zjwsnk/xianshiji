@@ -253,7 +253,9 @@ export default function StatisticsScreen() {
                     colors={['#769678', '#E9EDEB']}
                     style={styles.headerGradient}
                 >
-                    <ThemedText type="title" style={styles.headerTitle}>库存管理</ThemedText>
+                    <View style={styles.headerContainer}>
+                        <ThemedText type="title" style={styles.headerTitle}>库存管理</ThemedText>
+                    </View>
                 </LinearGradient>
 
                 <View style={styles.content}>
@@ -394,8 +396,16 @@ const styles = StyleSheet.create({
     },
     headerGradient: {
         height: 120,
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        paddingTop: 30,
+    },
+    headerContainer: {
+        flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
+        width: '100%',
+        paddingHorizontal: 20,
     },
     headerTitle: {
         color: '#fff',

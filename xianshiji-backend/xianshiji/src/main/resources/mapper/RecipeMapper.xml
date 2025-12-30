@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sixspirits.xianshiji.mapper.RecipeMapper">
+
+  <select id="findAll" resultType="com.sixspirits.xianshiji.entity.Recipe">
+    SELECT id, name, image_url as imageUrl, description, steps, created_at as createdAt,
+           prep_time as prepTime, cook_time as cookTime, difficulty, cuisine_type as cuisineType, servings
+    FROM recipe
+    ORDER BY created_at DESC
+  </select>
+
+  <select id="findByCuisineType" resultType="com.sixspirits.xianshiji.entity.Recipe">
+    SELECT id, name, image_url as imageUrl, description, steps, created_at as createdAt,
+           prep_time as prepTime, cook_time as cookTime, difficulty, cuisine_type as cuisineType, servings
+    FROM recipe
+    WHERE cuisine_type = #{cuisineType}
+    ORDER BY created_at DESC
+  </select>
+
+  <select id="findByKeyword" resultType="com.sixspirits.xianshiji.entity.Recipe">
+    SELECT id, name, image_url as imageUrl, description, steps, created_at as createdAt,
+           prep_time as prepTime, cook_time as cookTime, difficulty, cuisine_type as cuisineType, servings
+    FROM recipe
+    WHERE name LIKE CONCAT('%', #{keyword}, '%') OR cuisine_type LIKE CONCAT('%', #{keyword}, '%')
+    ORDER BY created_at DESC
+  </select>
+
+  <select id="findById" resultType="com.sixspirits.xianshiji.entity.Recipe">
+    SELECT id, name, image_url as imageUrl, description, steps, created_at as createdAt,
+           prep_time as prepTime, cook_time as cookTime, difficulty, cuisine_type as cuisineType, servings
+    FROM recipe
+    WHERE id = #{id}
+  </select>
+
+  <insert id="insert">
+    INSERT INTO recipe (name, image_url, description, steps, created_at, prep_time, cook_time, difficulty, cuisine_type, servings)
+    VALUES (#{name}, #{imageUrl}, #{description}, #{steps}, #{createdAt}, #{prepTime}, #{cookTime}, #{difficulty}, #{cuisineType}, #{servings})
+  </insert>
+
+  <update id="updateById">
+    UPDATE recipe SET
+      name = #{name}, image_url = #{imageUrl}, description = #{description}, steps = #{steps},
+      prep_time = #{prepTime}, cook_time = #{cookTime}, difficulty = #{difficulty}, cuisine_type = #{cuisineType}, servings = #{servings}
+    WHERE id = #{id}
+  </update>
+
+  <delete id="deleteById">
+    DELETE FROM recipe WHERE id = #{id}
+  </delete>
+
+</mapper>

@@ -11,7 +11,9 @@ export default function MessagesScreen() {
                 colors={['#769678', '#E9EDEB']}
                 style={styles.headerGradient}
             >
-                <ThemedText type="title" style={styles.headerTitle}>消息</ThemedText>
+                <View style={styles.headerContainer}>
+                    <ThemedText type="title" style={styles.headerTitle}>消息</ThemedText>
+                </View>
             </LinearGradient>
             <View style={styles.content}>
                 <Text style={styles.placeholder}>保质期预警消息</Text>
@@ -28,8 +30,16 @@ const styles = StyleSheet.create({
     },
     headerGradient: {
         height: 120,
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        paddingTop: 30,
+    },
+    headerContainer: {
+        flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
+        width: '100%',
+        paddingHorizontal: 20,
     },
     headerTitle: {
         color: '#fff',
