@@ -80,7 +80,7 @@ CREATE TABLE `food_item` (
   KEY `idx_family_id` (`family_id`),
   KEY `idx_expiry_date` (`expiry_date`),
   KEY `idx_status` (`status`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=85 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -97,8 +97,13 @@ CREATE TABLE `recipe` (
   `description` text,
   `steps` text,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `prep_time` smallint unsigned DEFAULT NULL COMMENT '准备时间（分钟）',
+  `cook_time` smallint unsigned DEFAULT NULL COMMENT '烹饪时间（分钟）',
+  `difficulty` enum('BEGINNER','INTERMEDIATE','ADVANCED') DEFAULT 'INTERMEDIATE' COMMENT '难度等级',
+  `cuisine_type` varchar(50) DEFAULT NULL COMMENT '菜系分类',
+  `servings` tinyint unsigned DEFAULT '1' COMMENT '份量（几人份）',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -114,7 +119,7 @@ CREATE TABLE `recipe_ingredient` (
   `ingredient_name` varchar(100) NOT NULL,
   `amount` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -137,7 +142,7 @@ CREATE TABLE `user` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_phone` (`phone`),
   UNIQUE KEY `uk_email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='App';
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='App';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -168,4 +173,4 @@ CREATE TABLE `user_family` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-12-28 16:42:23
+-- Dump completed on 2025-12-29 11:29:00
