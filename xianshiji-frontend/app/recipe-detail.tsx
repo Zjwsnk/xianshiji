@@ -19,19 +19,11 @@ interface Recipe {
     servings?: number;
 }
 
-interface RecipeIngredient {
-    id: number;
-    recipe_id: number;
-    ingredient_name: string;
-    amount?: string;
-}
-
 export default function RecipeDetailScreen() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
     const navigation = useNavigation();
     const [recipe, setRecipe] = useState<Recipe | null>(null);
-    const [ingredients, setIngredients] = useState<RecipeIngredient[]>([]);
     const [loading, setLoading] = useState(true);
 
     // 设置导航栏标题
@@ -65,15 +57,6 @@ export default function RecipeDetailScreen() {
                 
                 if (recipeData.success) {
                     setRecipe(recipeData.data);
-                }
-
-                // 加载食谱配料信息
-                const ingredientsUrl = apiUrl(`/recipes/${id}/ingredients`);
-                const ingredientsResponse = await fetch(ingredientsUrl);
-                const ingredientsData = await ingredientsResponse.json();
-                
-                if (ingredientsData.success) {
-                    setIngredients(ingredientsData.data);
                 }
             } catch (error) {
                 console.error('加载食谱详情失败:', error);
@@ -161,23 +144,6 @@ export default function RecipeDetailScreen() {
                 <View style={styles.sectionContainer}>
                     <Text style={styles.sectionTitle}>描述</Text>
                     <Text style={styles.descriptionText}>{recipe.description}</Text>
-                </View>
-            )}
-
-            {/* 配料列表 */}
-            {ingredients.length > 0 && (
-                <View style={styles.sectionContainer}>
-                    <Text style={styles.sectionTitle}>配料</Text>
-                    <View style={styles.ingredientsList}>
-                        {ingredients.map((ingredient) => (
-                            <View key={ingredient.id} style={styles.ingredientItem}>
-                                <Feather name="check-circle" size={16} color="#769678" />
-                                <Text style={styles.ingredientText}>
-                                    {ingredient.ingredient_name} {ingredient.amount}
-                                </Text>
-                            </View>
-                        ))}
-                    </View>
                 </View>
             )}
 
@@ -286,22 +252,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#666',
         lineHeight: 20,
-    },
-    ingredientsList: {
-        gap: 8,
-    },
-    ingredientItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        backgroundColor: '#f9f9f9',
-        padding: 10,
-        borderRadius: 8,
-    },
-    ingredientText: {
-        fontSize: 14,
-        color: '#333',
-        flex: 1,
     },
     stepsContainer: {
         gap: 16,

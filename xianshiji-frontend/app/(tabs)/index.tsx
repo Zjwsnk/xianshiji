@@ -1,5 +1,11 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import meishi1 from '../index-picture/meishi1.jpg';
+import meishi2 from '../index-picture/meishi2.jpg';
+import meishi3 from '../index-picture/meishi3.jpg';
+
+// Get screen width for carousel images
+const { width: screenWidth } = Dimensions.get('window');
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,6 +15,9 @@ import { Feather } from '@expo/vector-icons';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
+  const images = [meishi1, meishi2, meishi3];
+  const scrollViewRef = React.useRef<ScrollView>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -30,12 +39,41 @@ export default function HomeScreen() {
           <ThemedText type="title" style={styles.headerTitle}>首页</ThemedText>
         </View>
       </LinearGradient>
-      <View style={styles.content}>
-        <Image 
-          source={{ uri: 'https://images.unsplash.com/photo-1574291693613-62a8a4499780?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80' }} 
-          style={styles.mainImage} 
-          resizeMode="cover"
-        />
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.carouselContainer}>
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            scrollEventThrottle={16}
+            onScroll={(event) => {
+              const index = Math.round(event.nativeEvent.contentOffset.x / event.nativeEvent.layoutMeasurement.width);
+              setCurrentImageIndex(index);
+            }}
+            ref={scrollViewRef}
+            style={styles.horizontalScrollView}
+          >
+            {images.map((image, index) => (
+              <Image
+                key={index}
+                source={image}
+                style={styles.mainImage}
+                resizeMode="cover"
+              />
+            ))}
+          </ScrollView>
+          <View style={styles.pagination}>
+            {images.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.paginationDot,
+                  { opacity: index === currentImageIndex ? 1 : 0.5 }
+                ]}
+              />
+            ))}
+          </View>
+        </View>
         {/* 食材扫码录入按钮 */}
         <TouchableOpacity 
           style={styles.scanButton} 
@@ -67,7 +105,18 @@ export default function HomeScreen() {
             </View>
           </TouchableOpacity>
         </View>
-      </View>
+        
+        {/* 添加食材菜谱按钮 */}
+        <TouchableOpacity 
+          style={styles.scanButton} 
+          onPress={() => router.push('/recipe-add' as any)}
+        >
+          <View style={{flexDirection: 'row', alignItems: 'center'}}>
+            <Feather name="plus-circle" size={24} color="#1e2120ff" />
+            <ThemedText style={styles.scanButtonText}>添加食材菜谱</ThemedText>
+          </View>
+        </TouchableOpacity>
+      </ScrollView>
     </ThemedView>
   );
 }
@@ -94,18 +143,29 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 20,
   },
-  content: {
+  scrollView: {
     flex: 1,
     backgroundColor: '#E9EDEB',
+  },
+  content: {
     padding: 20,
     alignItems: 'center',
     justifyContent: 'flex-start',
   },
-  mainImage: {
+  carouselContainer: {
     width: '100%',
-    height: '60%',
-    borderRadius: 10,
+    height: 400,
+    position: 'relative',
     marginBottom: 20,
+  },
+  horizontalScrollView: {
+    width: '100%',
+    height: '100%',
+  },
+  mainImage: {
+    width: screenWidth - 40, // Default width
+    height: 400,
+    borderRadius: 10,
   },
   scanButton: {
     width: '100%',
@@ -130,6 +190,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
+    marginBottom: 20,
   },
   squareButton: {
     width: '48%',
@@ -143,5 +204,20 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  pagination: {
+    position: 'absolute',
+    bottom: 10,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#fff',
   },
 });

@@ -4,12 +4,8 @@ import { useRouter } from 'expo-router';
 import { useNavigation } from '@react-navigation/native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { apiUrl } from '@/constants/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-interface RecipeIngredient {
-  ingredientName: string;
-  amount: string;
-}
 
 export default function RecipeAddScreen() {
   const router = useRouter();
@@ -46,42 +42,12 @@ export default function RecipeAddScreen() {
     imageUrl: '',
   });
 
-  // 配料列表
-  const [ingredients, setIngredients] = useState<RecipeIngredient[]>([
-    { ingredientName: '', amount: '' },
-  ]);
-
   // 处理菜谱表单字段变化
   const handleRecipeChange = (field: string, value: string) => {
     setRecipeForm(prev => ({
       ...prev,
       [field]: value
     }));
-  };
-
-  // 处理配料字段变化
-  const handleIngredientChange = (index: number, field: keyof RecipeIngredient, value: string) => {
-    const updatedIngredients = [...ingredients];
-    updatedIngredients[index] = {
-      ...updatedIngredients[index],
-      [field]: value
-    };
-    setIngredients(updatedIngredients);
-  };
-
-  // 添加新配料
-  const addIngredient = () => {
-    setIngredients(prev => [...prev, { ingredientName: '', amount: '' }]);
-  };
-
-  // 删除配料
-  const removeIngredient = (index: number) => {
-    if (ingredients.length > 1) {
-      const updatedIngredients = ingredients.filter((_, i) => i !== index);
-      setIngredients(updatedIngredients);
-    } else {
-      Alert.alert('提示', '至少需要保留一个配料');
-    }
   };
 
   // 表单验证
@@ -132,18 +98,6 @@ export default function RecipeAddScreen() {
       return false;
     }
 
-    // 验证配料信息
-    for (let i = 0; i < ingredients.length; i++) {
-      if (!ingredients[i].ingredientName.trim()) {
-        Alert.alert('错误', `第${i + 1}个配料的食材名称不能为空`);
-        return false;
-      }
-      if (!ingredients[i].amount.trim()) {
-        Alert.alert('错误', `第${i + 1}个配料的用量不能为空`);
-        return false;
-      }
-    }
-
     return true;
   };
 
@@ -165,14 +119,11 @@ export default function RecipeAddScreen() {
           steps: recipeForm.steps.trim(),
           imageUrl: recipeForm.imageUrl.trim(),
         },
-        ingredients: ingredients.map(ingredient => ({
-          ingredientName: ingredient.ingredientName.trim(),
-          amount: ingredient.amount.trim(),
-        })),
+        ingredients: [], // 保持与后端API兼容性，发送空的配料列表
       };
 
       // API调用
-      const response = await fetch('http://localhost:8080/recipes', {
+      const response = await fetch(apiUrl('/recipes'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -180,12 +131,22 @@ export default function RecipeAddScreen() {
         body: JSON.stringify(recipeData),
       });
 
+      console.log('Response status:', response.status);
+      const responseText = await response.text();
+      console.log('Response text:', responseText);
+      
       if (!response.ok) {
-        throw new Error('添加菜谱失败');
+        throw new Error(`添加菜谱失败，状态码: ${response.status}, 响应: ${responseText}`);
       }
 
-      const result = await response.json();
-      console.log('Recipe added successfully:', result);
+      let result;
+      try {
+        result = JSON.parse(responseText);
+        console.log('Recipe added successfully:', result);
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+        result = { success: true };
+      }
 
       Alert.alert('成功', '菜谱已添加', [
         {
@@ -195,7 +156,11 @@ export default function RecipeAddScreen() {
       ]);
     } catch (error) {
       console.error('Error adding recipe:', error);
-      Alert.alert('错误', '添加菜谱失败，请重试');
+      let errorMessage = '添加菜谱失败，请重试';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      Alert.alert('错误', errorMessage);
     }
   };
 
@@ -213,141 +178,127 @@ export default function RecipeAddScreen() {
             <View style={styles.formGroup}>
               <ThemedText style={styles.label}>菜谱名称 *</ThemedText>
               <TextInput
-                style={styles.input}
-                placeholder="请输入菜谱名称"
-                value={recipeForm.name}
-                onChangeText={(text) => handleRecipeChange('name', text)}
-              />
+              style={styles.input}
+              placeholder="请输入菜谱名称"
+              placeholderTextColor="#666"
+              value={recipeForm.name}
+              onChangeText={(text) => handleRecipeChange('name', text)}
+            />
             </View>
 
             <View style={styles.formGroup}>
               <ThemedText style={styles.label}>菜系 *</ThemedText>
               <TextInput
-                style={styles.input}
-                placeholder="请输入菜系（如：川菜、粤菜）"
-                value={recipeForm.cuisineType}
-                onChangeText={(text) => handleRecipeChange('cuisineType', text)}
-              />
+              style={styles.input}
+              placeholder="请输入菜系（如：川菜、粤菜）"
+              placeholderTextColor="#666"
+              value={recipeForm.cuisineType}
+              onChangeText={(text) => handleRecipeChange('cuisineType', text)}
+            />
             </View>
 
             <View style={styles.row}>
               <View style={[styles.formGroup, { flex: 1, marginRight: 10 }]}>
                 <ThemedText style={styles.label}>准备时间（分钟）*</ThemedText>
                 <TextInput
-                  style={styles.input}
-                  placeholder="请输入准备时间"
-                  value={recipeForm.prepTime}
-                  onChangeText={(text) => handleRecipeChange('prepTime', text)}
-                  keyboardType="numeric"
-                />
+                style={styles.input}
+                placeholder="请输入准备时间"
+                placeholderTextColor="#666"
+                value={recipeForm.prepTime}
+                onChangeText={(text) => handleRecipeChange('prepTime', text)}
+                keyboardType="numeric"
+              />
               </View>
               <View style={[styles.formGroup, { flex: 1 }]}>
                 <ThemedText style={styles.label}>烹饪时间（分钟）*</ThemedText>
                 <TextInput
-                  style={styles.input}
-                  placeholder="请输入烹饪时间"
-                  value={recipeForm.cookTime}
-                  onChangeText={(text) => handleRecipeChange('cookTime', text)}
-                  keyboardType="numeric"
-                />
+                style={styles.input}
+                placeholder="请输入烹饪时间"
+                placeholderTextColor="#666"
+                value={recipeForm.cookTime}
+                onChangeText={(text) => handleRecipeChange('cookTime', text)}
+                keyboardType="numeric"
+              />
               </View>
             </View>
 
             <View style={styles.row}>
               <View style={[styles.formGroup, { flex: 1, marginRight: 10 }]}>
                 <ThemedText style={styles.label}>难度 *</ThemedText>
-                <TextInput
-                  style={styles.input}
-                  placeholder="请输入难度（如：简单、中等、困难）"
-                  value={recipeForm.difficulty}
-                  onChangeText={(text) => handleRecipeChange('difficulty', text)}
-                />
+                <View style={styles.dropdownContainer}>
+                  <View style={styles.dropdown}>
+                    <TouchableOpacity 
+                      style={[styles.dropdownItem, recipeForm.difficulty === 'BEGINNER' && styles.selectedDropdownItem]}
+                      onPress={() => handleRecipeChange('difficulty', 'BEGINNER')}
+                    >
+                      <Text style={[styles.dropdownItemText, recipeForm.difficulty === 'BEGINNER' && styles.selectedDropdownItemText]}>简单</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.dropdownItem, recipeForm.difficulty === 'INTERMEDIATE' && styles.selectedDropdownItem]}
+                      onPress={() => handleRecipeChange('difficulty', 'INTERMEDIATE')}
+                    >
+                      <Text style={[styles.dropdownItemText, recipeForm.difficulty === 'INTERMEDIATE' && styles.selectedDropdownItemText]}>中等</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.dropdownItem, recipeForm.difficulty === 'ADVANCED' && styles.selectedDropdownItem]}
+                      onPress={() => handleRecipeChange('difficulty', 'ADVANCED')}
+                    >
+                      <Text style={[styles.dropdownItemText, recipeForm.difficulty === 'ADVANCED' && styles.selectedDropdownItemText]}>困难</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
               </View>
               <View style={[styles.formGroup, { flex: 1 }]}>
                 <ThemedText style={styles.label}>份量（人）*</ThemedText>
                 <TextInput
-                  style={styles.input}
-                  placeholder="请输入份量"
-                  value={recipeForm.servings}
-                  onChangeText={(text) => handleRecipeChange('servings', text)}
-                  keyboardType="numeric"
-                />
+                style={styles.input}
+                placeholder="请输入份量"
+                placeholderTextColor="#666"
+                value={recipeForm.servings}
+                onChangeText={(text) => handleRecipeChange('servings', text)}
+                keyboardType="numeric"
+              />
               </View>
             </View>
 
             <View style={styles.formGroup}>
               <ThemedText style={styles.label}>菜谱描述 *</ThemedText>
               <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="请输入菜谱描述"
-                value={recipeForm.description}
-                onChangeText={(text) => handleRecipeChange('description', text)}
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-              />
+              style={[styles.input, styles.textArea]}
+              placeholder="请输入菜谱描述"
+              placeholderTextColor="#666"
+              value={recipeForm.description}
+              onChangeText={(text) => handleRecipeChange('description', text)}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
             </View>
 
             <View style={styles.formGroup}>
               <ThemedText style={styles.label}>烹饪步骤 *</ThemedText>
               <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="请输入烹饪步骤，每行一个步骤"
-                value={recipeForm.steps}
-                onChangeText={(text) => handleRecipeChange('steps', text)}
-                multiline
-                numberOfLines={6}
-                textAlignVertical="top"
-              />
+              style={[styles.input, styles.textArea]}
+              placeholder="请输入烹饪步骤，每行一个步骤"
+              placeholderTextColor="#666"
+              value={recipeForm.steps}
+              onChangeText={(text) => handleRecipeChange('steps', text)}
+              multiline
+              numberOfLines={6}
+              textAlignVertical="top"
+            />
             </View>
 
             <View style={styles.formGroup}>
               <ThemedText style={styles.label}>图片URL</ThemedText>
               <TextInput
-                style={styles.input}
-                placeholder="请输入图片URL"
-                value={recipeForm.imageUrl}
-                onChangeText={(text) => handleRecipeChange('imageUrl', text)}
-              />
+              style={styles.input}
+              placeholder="请输入图片URL"
+              placeholderTextColor="#666"
+              value={recipeForm.imageUrl}
+              onChangeText={(text) => handleRecipeChange('imageUrl', text)}
+            />
             </View>
-
-            {/* 配料部分 */}
-            <ThemedText style={styles.sectionTitle}>配料信息</ThemedText>
-            
-            {ingredients.map((ingredient, index) => (
-              <View key={index} style={styles.ingredientGroup}>
-                <View style={styles.row}>
-                  <View style={[styles.formGroup, { flex: 1.5, marginRight: 10 }]}>
-                    <ThemedText style={styles.label}>食材名称 *</ThemedText>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="请输入食材名称"
-                      value={ingredient.ingredientName}
-                      onChangeText={(text) => handleIngredientChange(index, 'ingredientName', text)}
-                    />
-                  </View>
-                  <View style={[styles.formGroup, { flex: 1, marginRight: 10 }]}>
-                    <ThemedText style={styles.label}>用量 *</ThemedText>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="请输入用量（如：100克）"
-                      value={ingredient.amount}
-                      onChangeText={(text) => handleIngredientChange(index, 'amount', text)}
-                    />
-                  </View>
-                  <TouchableOpacity
-                    style={styles.removeButton}
-                    onPress={() => removeIngredient(index)}
-                  >
-                    <Text style={styles.removeButtonText}>-</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
-
-            <TouchableOpacity style={styles.addButton} onPress={addIngredient}>
-              <Text style={styles.addButtonText}>+ 添加配料</Text>
-            </TouchableOpacity>
 
             {/* 提交按钮 */}
             <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
@@ -409,42 +360,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  ingredientGroup: {
-    marginBottom: 20,
-    padding: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderStyle: 'dashed',
-  },
-  addButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  removeButton: {
-    backgroundColor: '#f44336',
-    width: 45,
-    height: 45,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 26,
-  },
-  removeButtonText: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
   submitButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#6C9776',
     paddingVertical: 15,
     borderRadius: 8,
     alignItems: 'center',
@@ -455,6 +372,34 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: '#fff',
     fontSize: 18,
+    fontWeight: 'bold',
+  },
+  dropdownContainer: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#f9f9f9',
+  },
+  dropdown: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  dropdownItem: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selectedDropdownItem: {
+    backgroundColor: '#6C9776',
+  },
+  dropdownItemText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  selectedDropdownItemText: {
+    color: '#fff',
     fontWeight: 'bold',
   },
 });
