@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect } from 'react';
+import React, { useState, useLayoutEffect, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useNavigation } from '@react-navigation/native';
@@ -16,6 +16,17 @@ export default function ManualAddScreen() {
       headerTitle: '手动录入',
     });
   }, [navigation]);
+
+  // 添加认证检查逻辑
+  useEffect(() => {
+    const checkAuth = async () => {
+      const user = await AsyncStorage.getItem('user');
+      if (!user) {
+        router.replace('/login');
+      }
+    };
+    checkAuth();
+  }, [router]);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -247,10 +258,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
     elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.25)',
   },
   submitButtonText: {
     color: '#fff',

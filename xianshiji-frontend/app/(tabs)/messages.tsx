@@ -1,10 +1,24 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 
 export default function MessagesScreen() {
+    const router = useRouter();
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            const user = await AsyncStorage.getItem('user');
+            if (!user) {
+                router.replace('/login');
+            }
+        };
+        checkAuth();
+    }, [router]);
+
     return (
         <ThemedView style={styles.container}>
             <LinearGradient

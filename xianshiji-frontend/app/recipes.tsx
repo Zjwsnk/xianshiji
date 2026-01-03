@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, Image, Pressable } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useNavigation } from '@react-navigation/native';
@@ -11,8 +11,8 @@ import { apiUrl } from '@/constants/api';
 interface Recipe {
     id: number;
     name: string;
-    image_url?: string;
-    cuisine_type: string;
+    imageUrl?: string;
+    cuisineType: string;
     description?: string;
     steps?: string;
 }
@@ -73,14 +73,14 @@ export default function RecipesScreen() {
 
         // 按分类筛选
         if (selectedCategory) {
-            filtered = filtered.filter(recipe => recipe.cuisine_type === selectedCategory);
+            filtered = filtered.filter(recipe => recipe.cuisineType === selectedCategory);
         }
 
         // 按搜索文本筛选
         if (searchText.trim()) {
             filtered = filtered.filter(recipe =>
                 recipe.name.toLowerCase().includes(searchText.toLowerCase()) ||
-                recipe.cuisine_type.toLowerCase().includes(searchText.toLowerCase())
+                recipe.cuisineType.toLowerCase().includes(searchText.toLowerCase())
             );
         }
 
@@ -100,8 +100,12 @@ export default function RecipesScreen() {
     const renderRecipeItem = ({ item }: { item: Recipe }) => (
         <View style={styles.recipeCard}>
             <View style={styles.recipeImage}>
-                {item.image_url ? (
-                    <Feather name="image" size={35} color="#ddd" />
+                {item.imageUrl ? (
+                    <Image 
+                        source={{ uri: item.imageUrl }} 
+                        style={{ width: '100%', height: '100%', borderRadius: 8 }} 
+                        resizeMode="cover"
+                    />
                 ) : (
                     <Feather name="image" size={35} color="#ddd" />
                 )}
@@ -109,7 +113,7 @@ export default function RecipesScreen() {
 
             <View style={styles.recipeInfo}>
                 <Text style={styles.recipeName}>{item.name}</Text>
-                <Text style={styles.recipeCategory}>{item.cuisine_type}</Text>
+                <Text style={styles.recipeCategory}>{item.cuisineType}</Text>
             </View>
 
             <TouchableOpacity
@@ -122,45 +126,44 @@ export default function RecipesScreen() {
     );
 
     return (
-        <TouchableWithoutFeedback onPress={() => setShowSearchTags(false)}>
-            <View style={styles.container}>
-                <View style={styles.content}>
-                    {/* 搜索框 */}
-                    <TouchableWithoutFeedback onPress={() => setShowSearchTags(true)}>
-                        <View style={[styles.searchContainer, showSearchTags && styles.searchContainerExpanded]}>
-                            <Feather name="search" size={20} color="#666" style={styles.searchIcon} />
-                            {selectedCategory ? (
-                                <View style={styles.selectedCategoryContainer}>
-                                    <Text style={styles.selectedCategoryText}>{selectedCategory}</Text>
-                                    <TouchableOpacity
-                                        style={styles.clearButton}
-                                        onPress={() => {
-                                            setSelectedCategory('');
-                                            setSearchText('');
-                                        }}
-                                    >
-                                        <Feather name="x" size={16} color="#fff" />
-                                    </TouchableOpacity>
-                                </View>
-                            ) : (
-                                <TextInput
-                                    style={styles.searchInput}
-                                    placeholder="搜索菜谱名称或分类..."
-                                    value={searchText}
-                                    onChangeText={(text) => {
-                                        setSearchText(text);
+        <Pressable style={styles.container} onPress={() => setShowSearchTags(false)}>
+            <View style={styles.content}>
+                {/* 搜索框 */}
+                <Pressable onPress={() => setShowSearchTags(true)}>
+                    <View style={[styles.searchContainer, showSearchTags && styles.searchContainerExpanded]}>
+                        <Feather name="search" size={20} color="#666" style={styles.searchIcon} />
+                        {selectedCategory ? (
+                            <View style={styles.selectedCategoryContainer}>
+                                <Text style={styles.selectedCategoryText}>{selectedCategory}</Text>
+                                <TouchableOpacity
+                                    style={styles.clearButton}
+                                    onPress={() => {
                                         setSelectedCategory('');
-                                        setShowSearchTags(text.length === 0);
+                                        setSearchText('');
                                     }}
-                                    onFocus={() => setShowSearchTags(true)}
-                                />
-                            )}
-                        </View>
-                    </TouchableWithoutFeedback>
+                                >
+                                    <Feather name="x" size={16} color="#fff" />
+                                </TouchableOpacity>
+                            </View>
+                        ) : (
+                            <TextInput
+                                style={styles.searchInput}
+                                placeholder="搜索菜谱名称或分类..."
+                                value={searchText}
+                                onChangeText={(text) => {
+                                    setSearchText(text);
+                                    setSelectedCategory('');
+                                    setShowSearchTags(text.length === 0);
+                                }}
+                                onFocus={() => setShowSearchTags(true)}
+                            />
+                        )}
+                    </View>
+                </Pressable>
 
                     {/* 搜索标签浮层 - 位于搜索框下方 */}
                     {showSearchTags && !selectedCategory && (
-                        <TouchableWithoutFeedback>
+                        <Pressable>
                             <View style={styles.searchTagsOverlay}>
                                 <View style={styles.searchTagsContent}>
                                     {categories.map(category => (
@@ -174,7 +177,7 @@ export default function RecipesScreen() {
                                     ))}
                                 </View>
                             </View>
-                        </TouchableWithoutFeedback>
+                        </Pressable>
                     )}
 
                     {/* 菜谱列表 */}
@@ -191,9 +194,8 @@ export default function RecipesScreen() {
                             </View>
                         }
                     />
-                </View>
             </View>
-        </TouchableWithoutFeedback>
+        </Pressable>
     );
 }
 
@@ -215,10 +217,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         paddingVertical: 8,
         marginBottom: 15,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
+        boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
         elevation: 2,
         minHeight: 50,
     },
@@ -263,10 +262,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderRadius: 12,
         padding: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
         elevation: 3,
     },
     searchTag: {
@@ -289,10 +285,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         padding: 16,
         marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
         elevation: 3,
         flexDirection: 'row',
         alignItems: 'center',

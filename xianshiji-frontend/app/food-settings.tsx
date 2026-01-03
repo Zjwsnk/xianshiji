@@ -31,10 +31,12 @@ export default function FoodSettingsScreen() {
                 const parsedUser = JSON.parse(userData);
                 setUser(parsedUser);
                 loadFoodItems(parsedUser.id);
+            } else {
+                router.replace('/login');
             }
         };
         loadData();
-    }, []);
+    }, [router]);
 
     const loadFoodItems = async (userId: number) => {
         try {
@@ -197,10 +199,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         padding: 15,
         marginBottom: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
         elevation: 3,
     },
     itemInfo: {

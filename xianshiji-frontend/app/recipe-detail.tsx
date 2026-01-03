@@ -4,16 +4,17 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useNavigation } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import { apiUrl } from '@/constants/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Recipe {
     id: number;
     name: string;
-    image_url?: string;
-    cuisine_type: string;
+    imageUrl?: string;
+    cuisineType: string;
     description?: string;
     steps?: string;
-    prep_time?: number;
-    cook_time?: number;
+    prepTime?: number;
+    cookTime?: number;
     difficulty?: string;
     servings?: number;
 }
@@ -39,6 +40,17 @@ export default function RecipeDetailScreen() {
             headerTitle: '食谱详情',
         });
     }, [navigation]);
+
+    // 添加认证检查逻辑
+    useEffect(() => {
+        const checkAuth = async () => {
+            const user = await AsyncStorage.getItem('user');
+            if (!user) {
+                router.replace('/login');
+            }
+        };
+        checkAuth();
+    }, [router]);
 
     // 加载食谱详情数据
     useEffect(() => {
@@ -93,9 +105,9 @@ export default function RecipeDetailScreen() {
         <ScrollView style={styles.container}>
             {/* 食谱图片 */}
             <View style={styles.imageContainer}>
-                {recipe.image_url ? (
+                {recipe.imageUrl ? (
                     <Image 
-                        source={{ uri: recipe.image_url }} 
+                        source={{ uri: recipe.imageUrl }} 
                         style={styles.recipeImage} 
                         resizeMode="cover"
                     />
@@ -112,18 +124,18 @@ export default function RecipeDetailScreen() {
                 <View style={styles.metaContainer}>
                     <View style={styles.metaItem}>
                         <Feather name="book" size={16} color="#666" />
-                        <Text style={styles.metaText}>{recipe.cuisine_type}</Text>
+                        <Text style={styles.metaText}>{recipe.cuisineType}</Text>
                     </View>
-                    {recipe.prep_time && (
+                    {recipe.prepTime && (
                         <View style={styles.metaItem}>
                             <Feather name="clock" size={16} color="#666" />
-                            <Text style={styles.metaText}>准备 {recipe.prep_time} 分钟</Text>
+                            <Text style={styles.metaText}>准备 {recipe.prepTime} 分钟</Text>
                         </View>
                     )}
-                    {recipe.cook_time && (
+                    {recipe.cookTime && (
                         <View style={styles.metaItem}>
                             <Feather name="coffee" size={16} color="#666" />
-                            <Text style={styles.metaText}>烹饪 {recipe.cook_time} 分钟</Text>
+                            <Text style={styles.metaText}>烹饪 {recipe.cookTime} 分钟</Text>
                         </View>
                     )}
                     {recipe.servings && (

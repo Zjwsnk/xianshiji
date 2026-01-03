@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, Alert, Modal, TextInput as RNTextInput, ScrollView, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, Alert, Modal, TextInput as RNTextInput, ScrollView, Pressable, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -51,6 +51,9 @@ export default function StatisticsScreen() {
                 setUser(parsedUser);
                 loadFoodItems(parsedUser.id);
                 loadStatistics(parsedUser.id);
+            } else {
+                const router = require('expo-router').useRouter();
+                router.replace('/login');
             }
         };
         loadUserAndData();
@@ -206,7 +209,16 @@ export default function StatisticsScreen() {
     const renderFoodItem = ({ item }: { item: FoodItem }) => (
         <View style={styles.foodCard}>
             <View style={styles.foodImage}>
-                <Feather name="image" size={35} color="#ddd" />
+                {item.imageUrl ? (
+                    <Image 
+                        source={{ uri: item.imageUrl.trim() }} 
+                        style={{ width: '100%', height: '100%', borderRadius: 8 }}
+                        resizeMode="cover"
+                        onError={(error) => console.error('图片加载失败:', error, item.imageUrl)}
+                    />
+                ) : (
+                    <Feather name="image" size={35} color="#ddd" />
+                )}
             </View>
 
             <View style={styles.foodInfo}>
@@ -247,146 +259,144 @@ export default function StatisticsScreen() {
     );
 
     return (
-        <TouchableWithoutFeedback onPress={() => setShowSearchTags(false)}>
-            <View style={styles.container}>
-                <LinearGradient
-                    colors={['#769678', '#E9EDEB']}
-                    style={styles.headerGradient}
-                >
-                    <View style={styles.headerContainer}>
-                        <ThemedText type="title" style={styles.headerTitle}>库存管理</ThemedText>
-                    </View>
-                </LinearGradient>
+        <Pressable onPress={() => setShowSearchTags(false)} style={styles.container}>
+            <LinearGradient
+                colors={['#769678', '#E9EDEB']}
+                style={styles.headerGradient}
+            >
+                <View style={styles.headerContainer}>
+                    <ThemedText type="title" style={styles.headerTitle}>库存管理</ThemedText>
+                </View>
+            </LinearGradient>
 
-                <View style={styles.content}>
-                    {/* 搜索框 */}
-                    <TouchableWithoutFeedback onPress={() => setShowSearchTags(true)}>
-                        <View style={[styles.searchContainer, showSearchTags && styles.searchContainerExpanded]}>
-                            <Feather name="search" size={20} color="#666" style={styles.searchIcon} />
-                            {selectedCategory ? (
-                                <View style={styles.selectedCategoryContainer}>
-                                    <Text style={styles.selectedCategoryText}>{selectedCategory}</Text>
-                                    <TouchableOpacity
-                                        style={styles.clearButton}
-                                        onPress={() => {
-                                            setSelectedCategory('');
-                                            setSearchText('');
-                                        }}
-                                    >
-                                        <Feather name="x" size={16} color="#fff" />
-                                    </TouchableOpacity>
-                                </View>
-                            ) : (
-                                <TextInput
-                                    style={styles.searchInput}
-                                    placeholder="搜索食材名称或分类..."
-                                    value={searchText}
-                                    onChangeText={(text) => {
-                                        setSearchText(text);
+            <View style={styles.content}>
+                {/* 搜索框 */}
+                <Pressable onPress={() => setShowSearchTags(true)}>
+                    <View style={[styles.searchContainer, showSearchTags && styles.searchContainerExpanded]}>
+                        <Feather name="search" size={20} color="#666" style={styles.searchIcon} />
+                        {selectedCategory ? (
+                            <View style={styles.selectedCategoryContainer}>
+                                <Text style={styles.selectedCategoryText}>{selectedCategory}</Text>
+                                <TouchableOpacity
+                                    style={styles.clearButton}
+                                    onPress={() => {
                                         setSelectedCategory('');
-                                        setShowSearchTags(text.length === 0);
+                                        setSearchText('');
                                     }}
-                                    onFocus={() => setShowSearchTags(true)}
-                                />
-                            )}
-                        </View>
-                    </TouchableWithoutFeedback>
-
-                    {/* 搜索标签浮层 - 位于搜索框下方 */}
-                    {showSearchTags && !selectedCategory && (
-                        <TouchableWithoutFeedback>
-                            <View style={styles.searchTagsOverlay}>
-                                <View style={styles.searchTagsContent}>
-                                    {categories.map(category => (
-                                        <TouchableOpacity
-                                            key={category}
-                                            style={styles.searchTag}
-                                            onPress={() => handleCategoryPress(category)}
-                                        >
-                                            <Text style={styles.searchTagText}>{category}</Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
+                                >
+                                    <Feather name="x" size={16} color="#fff" />
+                                </TouchableOpacity>
                             </View>
-                        </TouchableWithoutFeedback>
-                    )}
-
-                    {/* 导航栏 */}
-                    <View style={styles.navContainer}>
-                        {tabs.map(tab => (
-                            <TouchableOpacity
-                                key={tab}
-                                style={[
-                                    styles.navButton,
-                                    selectedTab === tab && styles.navButtonActive
-                                ]}
-                                onPress={() => handleTabChange(tab)}
-                            >
-                                <Text style={[
-                                    styles.navText,
-                                    selectedTab === tab && styles.navTextActive
-                                ]}>
-                                    {tab}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
+                        ) : (
+                            <TextInput
+                                style={styles.searchInput}
+                                placeholder="搜索食材名称或分类..."
+                                value={searchText}
+                                onChangeText={(text) => {
+                                    setSearchText(text);
+                                    setSelectedCategory('');
+                                    setShowSearchTags(text.length === 0);
+                                }}
+                                onFocus={() => setShowSearchTags(true)}
+                            />
+                        )}
                     </View>
+                </Pressable>
 
-                    {/* 食材列表 */}
-                    <FlatList
-                        data={filteredItems}
-                        renderItem={renderFoodItem}
-                        keyExtractor={(item) => item.id.toString()}
-                        style={styles.list}
-                        showsVerticalScrollIndicator={false}
-                        ListEmptyComponent={
-                            <View style={styles.emptyContainer}>
-                                <Feather name="inbox" size={50} color="#ddd" />
-                                <Text style={styles.emptyText}>暂无数据</Text>
+                {/* 搜索标签浮层 - 位于搜索框下方 */}
+                {showSearchTags && !selectedCategory && (
+                    <Pressable>
+                        <View style={styles.searchTagsOverlay}>
+                            <View style={styles.searchTagsContent}>
+                                {categories.map(category => (
+                                    <TouchableOpacity
+                                        key={category}
+                                        style={styles.searchTag}
+                                        onPress={() => handleCategoryPress(category)}
+                                    >
+                                        <Text style={styles.searchTagText}>{category}</Text>
+                                    </TouchableOpacity>
+                                ))}
                             </View>
-                        }
-                    />
+                        </View>
+                    </Pressable>
+                )}
+
+                {/* 导航栏 */}
+                <View style={styles.navContainer}>
+                    {tabs.map(tab => (
+                        <TouchableOpacity
+                            key={tab}
+                            style={[
+                                styles.navButton,
+                                selectedTab === tab && styles.navButtonActive
+                            ]}
+                            onPress={() => handleTabChange(tab)}
+                        >
+                            <Text style={[
+                                styles.navText,
+                                selectedTab === tab && styles.navTextActive
+                            ]}>
+                                {tab}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
                 </View>
 
-                {/* 数量修改模态框 */}
-                <Modal visible={showQuantityModal} animationType="slide" transparent>
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.modalContent}>
-                            <Text style={styles.modalTitle}>修改数量</Text>
-                            <Text style={styles.modalSubtitle}>
-                                {selectedItem?.name} (当前: {selectedItem?.quantity} {selectedItem?.unit || '个'})
-                            </Text>
+                {/* 食材列表 */}
+                <FlatList
+                    data={filteredItems}
+                    renderItem={renderFoodItem}
+                    keyExtractor={(item) => item.id.toString()}
+                    style={styles.list}
+                    showsVerticalScrollIndicator={false}
+                    ListEmptyComponent={
+                        <View style={styles.emptyContainer}>
+                            <Feather name="inbox" size={50} color="#ddd" />
+                            <Text style={styles.emptyText}>暂无数据</Text>
+                        </View>
+                    }
+                />
+            </View>
 
-                            <RNTextInput
-                                style={styles.quantityInput}
-                                value={newQuantity}
-                                onChangeText={setNewQuantity}
-                                placeholder="输入新数量"
-                                keyboardType="numeric"
-                            />
+            {/* 数量修改模态框 */}
+            <Modal visible={showQuantityModal} animationType="slide" transparent>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>修改数量</Text>
+                        <Text style={styles.modalSubtitle}>
+                            {selectedItem?.name} (当前: {selectedItem?.quantity} {selectedItem?.unit || '个'})
+                        </Text>
 
-                            <View style={styles.modalButtons}>
-                                <TouchableOpacity
-                                    style={[styles.modalButton, styles.cancelButton]}
-                                    onPress={() => setShowQuantityModal(false)}
-                                >
-                                    <Text style={styles.cancelButtonText}>取消</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={[styles.modalButton, styles.confirmButton]}
-                                    onPress={updateQuantity}
-                                    disabled={loading}
-                                >
-                                    <Text style={styles.confirmButtonText}>
-                                        {loading ? '更新中...' : '确定'}
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
+                        <RNTextInput
+                            style={styles.quantityInput}
+                            value={newQuantity}
+                            onChangeText={setNewQuantity}
+                            placeholder="输入新数量"
+                            keyboardType="numeric"
+                        />
+
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity
+                                style={[styles.modalButton, styles.cancelButton]}
+                                onPress={() => setShowQuantityModal(false)}
+                            >
+                                <Text style={styles.cancelButtonText}>取消</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalButton, styles.confirmButton]}
+                                onPress={updateQuantity}
+                                disabled={loading}
+                            >
+                                <Text style={styles.confirmButtonText}>
+                                    {loading ? '更新中...' : '确定'}
+                                </Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
-                </Modal>
-            </View>
-        </TouchableWithoutFeedback>
+                </View>
+            </Modal>
+        </Pressable>
     );
 }
 
@@ -426,10 +436,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         paddingVertical: 8,
         marginBottom: 15,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
+        boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
         elevation: 2,
         minHeight: 50,
     },
@@ -456,10 +463,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         marginRight: 10,
         marginBottom: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 1,
+        boxShadow: '0px 1px 1px rgba(0, 0, 0, 0.1)',
         elevation: 1,
     },
     categoryButtonActive: {
@@ -480,10 +484,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         padding: 16,
         marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
         elevation: 3,
         flexDirection: 'row',
         alignItems: 'center',
@@ -660,10 +661,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderRadius: 8,
         padding: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
         elevation: 5,
         zIndex: 1000,
     },
@@ -693,10 +691,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderRadius: 12,
         padding: 15,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.15,
-        shadowRadius: 6,
+        boxShadow: '0px 3px 6px rgba(0, 0, 0, 0.15)',
         elevation: 10,
         zIndex: 9999,
         flexDirection: 'row',
@@ -708,10 +703,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         marginBottom: 20,
         padding: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
+        boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
         elevation: 2,
     },
     navButton: {
@@ -768,10 +760,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderRadius: 12,
         padding: 15,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.15,
-        shadowRadius: 6,
+        boxShadow: '0px 3px 6px rgba(0, 0, 0, 0.15)',
         elevation: 10,
         flexDirection: 'row',
         flexWrap: 'wrap',
@@ -790,10 +779,7 @@ const styles = StyleSheet.create({
         width: '85%',
         maxWidth: 350,
         maxHeight: '60%',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.25,
-        shadowRadius: 10,
+        boxShadow: '0px 10px 10px rgba(0, 0, 0, 0.25)',
         elevation: 20,
     },
     searchTagsHeader: {

@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { apiUrl } from '@/constants/api';
 
 export default function ProfileScreen() {
     const [user, setUser] = useState<any>(null);

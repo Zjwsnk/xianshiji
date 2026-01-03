@@ -1,9 +1,10 @@
-import React, { useState, useLayoutEffect } from 'react';
+import React, { useState, useLayoutEffect, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useNavigation } from '@react-navigation/native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface RecipeIngredient {
   ingredientName: string;
@@ -20,6 +21,17 @@ export default function RecipeAddScreen() {
       headerTitle: '菜谱录入',
     });
   }, [navigation]);
+
+  // 添加认证检查逻辑
+  useEffect(() => {
+    const checkAuth = async () => {
+      const user = await AsyncStorage.getItem('user');
+      if (!user) {
+        router.replace('/login');
+      }
+    };
+    checkAuth();
+  }, [router]);
   
   // 菜谱基本信息
   const [recipeForm, setRecipeForm] = useState({
@@ -438,10 +450,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 20,
     elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.25)',
   },
   submitButtonText: {
     color: '#fff',

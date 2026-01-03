@@ -31,7 +31,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="statistics"
         options={{
-          title: '统计',
+          title: '库存管理',
           tabBarIcon: ({ color, focused }) => (
             <Feather name="bar-chart-2" size={28} color={focused ? '#769678' : color} />
           ),
