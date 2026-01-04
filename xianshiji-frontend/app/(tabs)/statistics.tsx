@@ -13,6 +13,8 @@ interface FoodItem {
     category: string;
     quantity: number;
     unit: string;
+    minQuantity?: number;
+    purchaseDate?: string;
     expiryDate: string;
     status: 'NORMAL' | 'NEAR_EXPIRY' | 'INSUFFICIENT' | 'EXPIRED';
     imageUrl?: string;
@@ -162,40 +164,97 @@ export default function StatisticsScreen() {
         return Math.min(daysLeft / totalDays, 1);
     };
 
-    const handleConsume = (item: FoodItem) => {
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editFormData, setEditFormData] = useState({
+        name: '',
+        category: '',
+        quantity: '',
+        unit: '',
+        min_quantity: '',
+        purchase_date: '',
+        expiry_date: '',
+        image_url: '',
+    });
+
+    const handleEdit = (item: FoodItem) => {
         setSelectedItem(item);
-        setNewQuantity(item.quantity.toString());
-        setShowQuantityModal(true);
+        setEditFormData({
+            name: item.name,
+            category: item.category || '',
+            quantity: item.quantity.toString(),
+            unit: item.unit || '',
+            min_quantity: item.minQuantity ? item.minQuantity.toString() : '',
+            purchase_date: item.purchaseDate || '',
+            expiry_date: item.expiryDate,
+            image_url: item.imageUrl || '',
+        });
+        setShowEditModal(true);
     };
 
-    const updateQuantity = async () => {
-        if (!selectedItem || !user) return;
+    const handleEditChange = (field: string, value: string) => {
+        setEditFormData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
 
-        const quantity = parseFloat(newQuantity);
-        if (isNaN(quantity) || quantity < 0) {
-            Alert.alert('错误', '请输入有效的数量');
-            return;
+    const validateEditForm = () => {
+        if (!editFormData.name.trim()) {
+            Alert.alert('错误', '请输入食材名称');
+            return false;
         }
+        if (!editFormData.quantity) {
+            Alert.alert('错误', '请输入数量');
+            return false;
+        }
+        if (isNaN(Number(editFormData.quantity))) {
+            Alert.alert('错误', '数量必须是数字');
+            return false;
+        }
+        if (!editFormData.expiry_date) {
+            Alert.alert('错误', '请输入过期日期');
+            return false;
+        }
+        // 简单的日期格式验证
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(editFormData.expiry_date)) {
+            Alert.alert('错误', '过期日期格式不正确，请使用YYYY-MM-DD格式');
+            return false;
+        }
+        return true;
+    };
+
+    const handleUpdateFoodItem = async () => {
+        if (!validateEditForm() || !selectedItem || !user) return;
 
         setLoading(true);
         try {
-            const response = await fetch(apiUrl(`/food-items/${selectedItem.id}/quantity`), {
+            const foodData = {
+                userId: user.id,
+                name: editFormData.name.trim(),
+                category: editFormData.category.trim() || null,
+                quantity: parseFloat(editFormData.quantity),
+                unit: editFormData.unit.trim() || null,
+                minQuantity: editFormData.min_quantity ? parseFloat(editFormData.min_quantity) : null,
+                purchaseDate: editFormData.purchase_date || null,
+                expiryDate: editFormData.expiry_date,
+                imageUrl: editFormData.image_url.trim() || null,
+            };
+
+            const response = await fetch(apiUrl(`/food-items/${selectedItem.id}`), {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    userId: user.id,
-                    quantity: quantity
-                }),
+                body: JSON.stringify(foodData),
             });
 
             const data = await response.json();
             if (data.success) {
                 await loadFoodItems(user.id);
                 await loadStatistics(user.id);
-                setShowQuantityModal(false);
-                Alert.alert('成功', '数量更新成功');
+                setShowEditModal(false);
+                Alert.alert('成功', '食材信息更新成功');
             } else {
                 Alert.alert('失败', data.message);
             }
@@ -204,6 +263,41 @@ export default function StatisticsScreen() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleDeleteFoodItem = async () => {
+        if (!selectedItem || !user) return;
+
+        Alert.alert(
+            '确认删除',
+            `确定要删除食材 "${selectedItem.name}" 吗？`,
+            [
+                { text: '取消', style: 'cancel' },
+                { 
+                    text: '删除', 
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            const response = await fetch(apiUrl(`/food-items/${selectedItem.id}?userId=${user.id}`), {
+                                method: 'DELETE',
+                            });
+
+                            const data = await response.json();
+                            if (data.success) {
+                                await loadFoodItems(user.id);
+                                await loadStatistics(user.id);
+                                setShowEditModal(false);
+                                Alert.alert('成功', '食材已删除');
+                            } else {
+                                Alert.alert('失败', data.message);
+                            }
+                        } catch (error) {
+                            Alert.alert('错误', '网络错误，请重试');
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     const renderFoodItem = ({ item }: { item: FoodItem }) => (
@@ -250,10 +344,10 @@ export default function StatisticsScreen() {
 
             <TouchableOpacity
                 style={styles.consumeButton}
-                onPress={() => handleConsume(item)}
+                onPress={() => handleEdit(item)}
             >
-                <Feather name="minus" size={18} color="#fff" />
-                <Text style={styles.consumeButtonText}>消耗</Text>
+                <Feather name="edit-2" size={18} color="#fff" />
+                <Text style={styles.consumeButtonText}>编辑</Text>
             </TouchableOpacity>
         </View>
     );
@@ -359,40 +453,136 @@ export default function StatisticsScreen() {
                 />
             </View>
 
-            {/* 数量修改模态框 */}
-            <Modal visible={showQuantityModal} animationType="slide" transparent>
+            {/* 编辑食材模态框 */}
+            <Modal visible={showEditModal} animationType="slide" transparent>
                 <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>修改数量</Text>
-                        <Text style={styles.modalSubtitle}>
-                            {selectedItem?.name} (当前: {selectedItem?.quantity} {selectedItem?.unit || '个'})
-                        </Text>
+                    <View style={[styles.modalContent, { width: '90%', maxHeight: '80%' }]}>
+                        <Text style={styles.modalTitle}>编辑食材信息</Text>
+                        
+                        <ScrollView style={styles.modalScrollView}>
+                            <View style={styles.formGroup}>
+                                <Text style={styles.label}>食材名称 *</Text>
+                                <RNTextInput
+                                    style={styles.input}
+                                    placeholder="请输入食材名称"
+                                    placeholderTextColor="#666"
+                                    value={editFormData.name}
+                                    onChangeText={(text) => handleEditChange('name', text)}
+                                />
+                            </View>
 
-                        <RNTextInput
-                            style={styles.quantityInput}
-                            value={newQuantity}
-                            onChangeText={setNewQuantity}
-                            placeholder="输入新数量"
-                            keyboardType="numeric"
-                        />
+                            <View style={styles.formGroup}>
+                                <Text style={styles.label}>分类</Text>
+                                <RNTextInput
+                                    style={styles.input}
+                                    placeholder="请输入分类（如：水果、蔬菜）"
+                                    placeholderTextColor="#666"
+                                    value={editFormData.category}
+                                    onChangeText={(text) => handleEditChange('category', text)}
+                                />
+                            </View>
+
+                            <View style={styles.row}>
+                                <View style={[styles.formGroup, { flex: 2 }]}>
+                                    <Text style={styles.label}>数量 *</Text>
+                                    <RNTextInput
+                                        style={styles.input}
+                                        placeholder="请输入数量"
+                                        placeholderTextColor="#666"
+                                        value={editFormData.quantity}
+                                        onChangeText={(text) => handleEditChange('quantity', text)}
+                                        keyboardType="numeric"
+                                    />
+                                </View>
+                                <View style={[styles.formGroup, { flex: 1, marginLeft: 10 }]}>
+                                    <Text style={styles.label}>单位</Text>
+                                    <RNTextInput
+                                        style={styles.input}
+                                        placeholder="如：个、斤"
+                                        placeholderTextColor="#666"
+                                        value={editFormData.unit}
+                                        onChangeText={(text) => handleEditChange('unit', text)}
+                                    />
+                                </View>
+                            </View>
+
+                            <View style={styles.formGroup}>
+                                <Text style={styles.label}>保底数量</Text>
+                                <RNTextInput
+                                    style={styles.input}
+                                    placeholder="请输入保底数量"
+                                    placeholderTextColor="#666"
+                                    value={editFormData.min_quantity}
+                                    onChangeText={(text) => handleEditChange('min_quantity', text)}
+                                    keyboardType="numeric"
+                                />
+                            </View>
+
+                            <View style={styles.formGroup}>
+                                <Text style={styles.label}>购买日期</Text>
+                                <RNTextInput
+                                    style={styles.input}
+                                    placeholder="YYYY-MM-DD"
+                                    value={editFormData.purchase_date}
+                                    onChangeText={(text) => handleEditChange('purchase_date', text)}
+                                    keyboardType="numeric"
+                                    maxLength={10}
+                                    placeholderTextColor="#666"
+                                />
+                                <Text style={styles.helperText}>请使用YYYY-MM-DD格式</Text>
+                            </View>
+
+                            <View style={styles.formGroup}>
+                                <Text style={styles.label}>过期日期 *</Text>
+                                <RNTextInput
+                                    style={styles.input}
+                                    placeholder="YYYY-MM-DD"
+                                    value={editFormData.expiry_date}
+                                    onChangeText={(text) => handleEditChange('expiry_date', text)}
+                                    keyboardType="numeric"
+                                    maxLength={10}
+                                    placeholderTextColor="#666"
+                                />
+                                <Text style={styles.helperText}>请使用YYYY-MM-DD格式</Text>
+                            </View>
+
+                            <View style={styles.formGroup}>
+                                <Text style={styles.label}>图片URL</Text>
+                                <RNTextInput
+                                    style={styles.input}
+                                    placeholder="请输入图片URL"
+                                    placeholderTextColor="#666"
+                                    value={editFormData.image_url}
+                                    onChangeText={(text) => handleEditChange('image_url', text)}
+                                />
+                            </View>
+                        </ScrollView>
 
                         <View style={styles.modalButtons}>
                             <TouchableOpacity
                                 style={[styles.modalButton, styles.cancelButton]}
-                                onPress={() => setShowQuantityModal(false)}
+                                onPress={() => setShowEditModal(false)}
                             >
                                 <Text style={styles.cancelButtonText}>取消</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.modalButton, styles.confirmButton]}
-                                onPress={updateQuantity}
+                                onPress={handleUpdateFoodItem}
                                 disabled={loading}
                             >
                                 <Text style={styles.confirmButtonText}>
-                                    {loading ? '更新中...' : '确定'}
+                                    {loading ? '更新中...' : '修改食材'}
                                 </Text>
                             </TouchableOpacity>
                         </View>
+
+                        <TouchableOpacity
+                            style={styles.deleteButton}
+                            onPress={handleDeleteFoodItem}
+                            disabled={loading}
+                        >
+                            <Text style={styles.deleteButtonText}>删除食材</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </Modal>
@@ -583,6 +773,50 @@ const styles = StyleSheet.create({
         padding: 20,
         width: '80%',
         maxWidth: 400,
+    },
+    modalScrollView: {
+        marginVertical: 10,
+    },
+    formGroup: {
+        marginBottom: 15,
+    },
+    label: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginBottom: 5,
+        color: '#333',
+    },
+    input: {
+        height: 45,
+        borderColor: '#ccc',
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 15,
+        fontSize: 16,
+        backgroundColor: '#f9f9f9',
+    },
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    helperText: {
+        fontSize: 12,
+        color: '#666',
+        marginTop: 4,
+        marginLeft: 4,
+    },
+    deleteButton: {
+        backgroundColor: '#f44336',
+        paddingVertical: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginTop: 10,
+        elevation: 3,
+    },
+    deleteButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
     modalTitle: {
         fontSize: 20,

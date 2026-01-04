@@ -132,6 +132,7 @@ public class FoodItemService {
 
         item.setQuantity(newQuantity);
         item.setUpdatedAt(LocalDateTime.now());
+        item.setStatus(calculateStatus(item)); // 更新状态
 
         // 如果数量为0，软删除
         if (newQuantity.compareTo(BigDecimal.ZERO) <= 0) {
@@ -144,16 +145,69 @@ public class FoodItemService {
     }
 
     public boolean updateMinQuantity(Long id, BigDecimal minQuantity, Long userId) {
+        System.out.println("Service层：查找食材，id=" + id);
+        
         FoodItem item = foodItemMapper.findById(id);
-        if (item == null || !item.getUserId().equals(userId)) {
+        
+        if (item == null) {
+            System.out.println("Service层：未找到食材，id=" + id);
+            return false;
+        }
+        
+        System.out.println("Service层：找到食材，id=" + id + ", userId=" + item.getUserId());
+        
+        if (!item.getUserId().equals(userId)) {
+            System.out.println("Service层：权限验证失败，食材userId=" + item.getUserId() + ", 请求userId=" + userId);
             return false;
         }
 
         item.setMinQuantity(minQuantity);
         item.setUpdatedAt(LocalDateTime.now());
+        item.setStatus(calculateStatus(item)); // 更新状态
 
-        foodItemMapper.updateById(item);
-        return true;
+        System.out.println("Service层：更新前的食材信息：" + item);
+        
+        int rowsUpdated = foodItemMapper.updateById(item);
+        System.out.println("Service层：影响的行数：" + rowsUpdated);
+        
+        return rowsUpdated > 0;
+    }
+
+    public boolean updateFoodItem(Long id, FoodItem foodItem, Long userId) {
+        System.out.println("Service层：查找食材，id=" + id);
+        
+        FoodItem item = foodItemMapper.findById(id);
+        
+        if (item == null) {
+            System.out.println("Service层：未找到食材，id=" + id);
+            return false;
+        }
+        
+        System.out.println("Service层：找到食材，id=" + id + ", userId=" + item.getUserId());
+        
+        if (!item.getUserId().equals(userId)) {
+            System.out.println("Service层：权限验证失败，食材userId=" + item.getUserId() + ", 请求userId=" + userId);
+            return false;
+        }
+
+        // 更新食材信息
+        item.setName(foodItem.getName());
+        item.setCategory(foodItem.getCategory());
+        item.setQuantity(foodItem.getQuantity());
+        item.setUnit(foodItem.getUnit());
+        item.setMinQuantity(foodItem.getMinQuantity());
+        item.setPurchaseDate(foodItem.getPurchaseDate());
+        item.setExpiryDate(foodItem.getExpiryDate());
+        item.setImageUrl(foodItem.getImageUrl());
+        item.setUpdatedAt(LocalDateTime.now());
+        item.setStatus(calculateStatus(item)); // 更新状态
+
+        System.out.println("Service层：更新前的食材信息：" + item);
+        
+        int rowsUpdated = foodItemMapper.updateById(item);
+        System.out.println("Service层：影响的行数：" + rowsUpdated);
+        
+        return rowsUpdated > 0;
     }
 
     public boolean deleteFoodItem(Long id, Long userId) {
@@ -190,14 +244,14 @@ public class FoodItemService {
             validQuantity = quantity; // 无过期日期，默认为有效
         }
 
-        // 判断数量不足：有效数量 <= 保底数量 且 有效数量 > 0
+        // 首先判断数量不足状态（优先级最高）
         if (item.getMinQuantity() != null &&
-                validQuantity.compareTo(item.getMinQuantity()) <= 0 &&
-                validQuantity.compareTo(BigDecimal.ZERO) > 0) {
+                quantity.compareTo(item.getMinQuantity()) <= 0 &&
+                quantity.compareTo(BigDecimal.ZERO) > 0) {
             return "INSUFFICIENT";
         }
 
-        // 正常的过期状态判断
+        // 然后判断过期状态
         if (expiryDate != null) {
             LocalDate today = LocalDate.now();
             long daysUntilExpiry = ChronoUnit.DAYS.between(today, expiryDate);

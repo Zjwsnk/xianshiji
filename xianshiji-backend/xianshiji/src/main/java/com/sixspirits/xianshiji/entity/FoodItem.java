@@ -167,4 +167,26 @@ public class FoodItem {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    @Override
+    public String toString() {
+        return "FoodItem{" +
+                "id=" + id +
+                ", userId=" + userId +
+                ", familyId=" + familyId +
+                ", name='" + name + '\'' +
+                ", category='" + category + '\'' +
+                ", barcode='" + barcode + '\'' +
+                ", quantity=" + quantity +
+                ", unit='" + unit + '\'' +
+                ", minQuantity=" + minQuantity +
+                ", purchaseDate=" + purchaseDate +
+                ", expiryDate=" + expiryDate +
+                ", imageUrl='" + imageUrl + '\'' +
+                ", status='" + status + '\'' +
+                ", isDeleted=" + isDeleted +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
+    }
 }

@@ -152,13 +152,20 @@ public class FoodItemController {
             @PathVariable Long id,
             @RequestBody Map<String, Object> request) {
 
+        System.out.println("收到更新保底数量请求: id=" + id + ", request=" + request);
+
         Long userId = Long.parseLong(request.get("userId").toString());
         BigDecimal minQuantity = request.get("minQuantity") != null
                 ? new BigDecimal(request.get("minQuantity").toString())
                 : null;
 
         try {
+            System.out.println("开始执行更新: id=" + id + ", userId=" + userId + ", minQuantity=" + minQuantity);
+            
             boolean success = foodItemService.updateMinQuantity(id, minQuantity, userId);
+            
+            System.out.println("更新结果: " + success);
+            
             Map<String, Object> response = new HashMap<>();
             response.put("success", success);
             if (!success) {
@@ -166,6 +173,42 @@ public class FoodItemController {
             }
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            System.err.println("更新保底数量时发生错误: " + e.getMessage());
+            e.printStackTrace();
+            
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> updateFoodItem(
+            @PathVariable Long id,
+            @RequestBody FoodItem foodItem) {
+
+        System.out.println("收到更新食材信息请求: id=" + id + ", foodItem=" + foodItem);
+
+        Long userId = foodItem.getUserId();
+
+        try {
+            System.out.println("开始执行更新: id=" + id + ", userId=" + userId);
+            
+            boolean success = foodItemService.updateFoodItem(id, foodItem, userId);
+            
+            System.out.println("更新结果: " + success);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", success);
+            if (!success) {
+                response.put("message", "更新失败，食材不存在或无权限");
+            }
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println("更新食材信息时发生错误: " + e.getMessage());
+            e.printStackTrace();
+            
             Map<String, Object> error = new HashMap<>();
             error.put("success", false);
             error.put("message", e.getMessage());

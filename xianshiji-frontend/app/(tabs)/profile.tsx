@@ -10,10 +10,6 @@ import { apiUrl } from '@/constants/api';
 
 export default function ProfileScreen() {
     const [user, setUser] = useState<any>(null);
-    const [showFamilyModal, setShowFamilyModal] = useState(false);
-    const [familyAction, setFamilyAction] = useState<'create' | 'join'>('create');
-    const [familyName, setFamilyName] = useState('');
-    const [inviteCode, setInviteCode] = useState('');
     const router = useRouter();
 
     useEffect(() => {
@@ -37,40 +33,6 @@ export default function ProfileScreen() {
                 }
             }
         ]);
-    };
-
-    const handleFamilyAction = (action: 'create' | 'join') => {
-        setFamilyAction(action);
-        setShowFamilyModal(true);
-        setFamilyName('');
-        setInviteCode('');
-    };
-
-    const submitFamilyAction = async () => {
-        try {
-            const endpoint = familyAction === 'create' ? '/families/create' : '/families/join';
-            const body = familyAction === 'create'
-                ? { familyName: familyName, creatorId: user?.id?.toString() }
-                : { inviteCode: inviteCode, userId: user?.id?.toString() };
-
-            const response = await fetch(apiUrl(endpoint), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(body),
-            });
-
-            const data = await response.json();
-            if (data.success) {
-                Alert.alert('成功', familyAction === 'create' ? '家庭组创建成功' : '加入家庭组成功');
-                setShowFamilyModal(false);
-            } else {
-                Alert.alert('失败', data.message);
-            }
-        } catch (error) {
-            Alert.alert('错误', '网络错误，请检查后端地址');
-        }
     };
 
     return (
@@ -102,59 +64,12 @@ export default function ProfileScreen() {
                     <Feather name="chevron-right" size={20} color="#ccc" />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.menuItem} onPress={() => handleFamilyAction('create')}>
-                    <Feather name="users" size={24} color="#769678" />
-                    <Text style={styles.menuText}>我的家庭</Text>
-                    <Feather name="chevron-right" size={20} color="#ccc" />
-                </TouchableOpacity>
-
                 <TouchableOpacity style={[styles.menuItem, styles.logoutItem]} onPress={handleLogout}>
                     <Feather name="log-out" size={24} color="#F44336" />
                     <Text style={[styles.menuText, styles.logoutText]}>退出登录</Text>
                     <Feather name="chevron-right" size={20} color="#ccc" />
                 </TouchableOpacity>
             </View>
-
-            <Modal visible={showFamilyModal} animationType="slide" transparent>
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>
-                            {familyAction === 'create' ? '创建家庭组' : '加入家庭组'}
-                        </Text>
-
-                        {familyAction === 'create' ? (
-                            <TextInput
-                                style={styles.input}
-                                placeholder="输入家庭组名称"
-                                value={familyName}
-                                onChangeText={setFamilyName}
-                            />
-                        ) : (
-                            <TextInput
-                                style={styles.input}
-                                placeholder="输入邀请码"
-                                value={inviteCode}
-                                onChangeText={setInviteCode}
-                            />
-                        )}
-
-                        <View style={styles.modalButtons}>
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.cancelButton]}
-                                onPress={() => setShowFamilyModal(false)}
-                            >
-                                <Text style={styles.cancelButtonText}>取消</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.confirmButton]}
-                                onPress={submitFamilyAction}
-                            >
-                                <Text style={styles.confirmButtonText}>确定</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
         </ThemedView>
     );
 }

@@ -19,6 +19,11 @@ public interface FoodItemMapper {
 
     int insert(FoodItem foodItem);
 
+    /**
+     * 更新食材信息
+     * @param foodItem 食材对象
+     * @return 影响的行数
+     */
     int updateById(FoodItem foodItem);
 
     int softDeleteById(@Param("id") Long id);

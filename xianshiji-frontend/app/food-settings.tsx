@@ -63,6 +63,12 @@ export default function FoodSettingsScreen() {
         }
 
         try {
+            console.log('请求API:', apiUrl(`/food-items/${item.id}/min-quantity`));
+            console.log('请求体:', JSON.stringify({
+                userId: user.id,
+                minQuantity: minQuantity
+            }));
+            
             const response = await fetch(apiUrl(`/food-items/${item.id}/min-quantity`), {
                 method: 'PUT',
                 headers: {
@@ -74,7 +80,10 @@ export default function FoodSettingsScreen() {
                 }),
             });
 
+            console.log('响应状态:', response.status);
             const data = await response.json();
+            console.log('响应数据:', data);
+
             if (data.success) {
                 setFoodItems(prev => prev.map(food =>
                     food.id === item.id
@@ -88,7 +97,8 @@ export default function FoodSettingsScreen() {
                 Alert.alert('失败', data.message);
             }
         } catch (error) {
-            Alert.alert('错误', '网络错误');
+            console.error('错误详情:', error);
+            Alert.alert('错误', `网络错误: ${(error as any).message}`);
         }
     };
 
