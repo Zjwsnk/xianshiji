@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -25,6 +25,7 @@ export default function MessagesScreen() {
     const [warningItems, setWarningItems] = useState<FoodItem[]>([]);
     const [expiredItems, setExpiredItems] = useState<FoodItem[]>([]);
     const [insufficientItems, setInsufficientItems] = useState<FoodItem[]>([]);
+    const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -56,6 +57,19 @@ export default function MessagesScreen() {
             }
         } catch (error) {
             console.error('加载警告消息失败:', error);
+        }
+    };
+
+    const handleRefresh = async () => {
+        if (!user) return;
+        
+        setRefreshing(true);
+        try {
+            await loadWarningMessages(user.id);
+        } catch (error) {
+            console.error('刷新失败:', error);
+        } finally {
+            setRefreshing(false);
         }
     };
 
@@ -217,6 +231,14 @@ export default function MessagesScreen() {
                 }
                 ListFooterComponent={<View style={{ height: 20 }} />}
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={handleRefresh}
+                        colors={['#769678']} // 设置刷新指示器的颜色
+                        tintColor="#769678" // iOS下刷新指示器的颜色
+                    />
+                }
             />
         </ThemedView>
     );
@@ -227,10 +249,10 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     headerGradient: {
-        height: 120,
+        height: 80,
         justifyContent: 'flex-start',
         alignItems: 'center',
-        paddingTop: 30,
+        paddingTop: 40,
     },
     headerContainer: {
         flexDirection: 'row',

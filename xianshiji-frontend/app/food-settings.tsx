@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+ import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, FlatList, TextInput } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter, useNavigation } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -23,6 +22,14 @@ export default function FoodSettingsScreen() {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editValue, setEditValue] = useState('');
     const router = useRouter();
+    const navigation = useNavigation();
+
+    // 配置导航栏
+    useLayoutEffect(() => {
+        navigation.setOptions({
+            headerTitle: '食材设置',
+        });
+    }, [navigation]);
 
     useEffect(() => {
         const loadData = async () => {
@@ -147,16 +154,6 @@ export default function FoodSettingsScreen() {
 
     return (
         <ThemedView style={styles.container}>
-            <LinearGradient
-                colors={['#769678', '#E9EDEB']}
-                style={styles.headerGradient}
-            >
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <Feather name="arrow-left" size={24} color="#fff" />
-                    </TouchableOpacity>
-                </View>
-            </LinearGradient>
             <View style={styles.content}>
                 <Text style={styles.description}>
                     设置食材的保底数量，当食材数量低于保底数量时，会标记为"数量不足"。
@@ -176,23 +173,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#E9EDEB',
-    },
-    headerGradient: {
-        paddingTop: 40,
-        paddingBottom: 20,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-    },
-    backButton: {
-        marginRight: 15,
-    },
-    headerTitle: {
-        color: '#fff',
-        fontSize: 20,
-        fontWeight: 'bold',
     },
     content: {
         flex: 1,

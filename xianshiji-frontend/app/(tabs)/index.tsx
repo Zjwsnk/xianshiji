@@ -126,10 +126,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerGradient: {
-    height: 120,
+    height: 80,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingTop: 30,
+    paddingTop: 40,
   },
   headerTitle: {
     color: '#fff',

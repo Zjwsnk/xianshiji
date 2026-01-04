@@ -38,6 +38,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="scan"
+        options={{
+          title: '',
+          tabBarIcon: ({ color, focused }) => (
+            <Feather name="maximize" size={28} color={focused ? '#769678' : color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="messages"
         options={{
           title: '消息',

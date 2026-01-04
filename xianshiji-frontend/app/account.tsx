@@ -166,6 +166,12 @@ export default function AccountScreen() {
                 colors={['#769678', '#E9EDEB']}
                 style={styles.headerGradient}
             >
+                <TouchableOpacity 
+                    style={styles.backButton} 
+                    onPress={() => router.back()}
+                >
+                    <Feather name="arrow-left" size={24} color="#fff" />
+                </TouchableOpacity>
                 <View style={styles.avatarSection}>
                     <View style={styles.avatarContainer}>
                         {selectedImageUri || user?.avatarUrl ? (
@@ -303,6 +309,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingTop: 40,
         paddingBottom: 30,
+        position: 'relative',
+    },
+    backButton: {
+        position: 'absolute',
+        left: 10,
+        top: 40,
+        padding: 10,
     },
     avatarSection: {
         position: 'relative',

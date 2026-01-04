@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, Alert, Modal, TextInput as RNTextInput, ScrollView, Pressable, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, Alert, Modal, TextInput as RNTextInput, ScrollView, Pressable, Image, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -41,6 +41,7 @@ export default function StatisticsScreen() {
     const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
     const [newQuantity, setNewQuantity] = useState('');
     const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
 
     const tabs = ['全部', '临近保质期', '数量不足', '已过期'];
     const categories = ['水果', '蔬菜', '肉类', '乳制品', '谷物', '调料', '饮料'];
@@ -88,6 +89,22 @@ export default function StatisticsScreen() {
             }
         } catch (error) {
             console.error('加载统计失败:', error);
+        }
+    };
+
+    const handleRefresh = async () => {
+        if (!user) return;
+        
+        setRefreshing(true);
+        try {
+            await Promise.all([
+                loadFoodItems(user.id),
+                loadStatistics(user.id)
+            ]);
+        } catch (error) {
+            console.error('刷新失败:', error);
+        } finally {
+            setRefreshing(false);
         }
     };
 
@@ -444,6 +461,14 @@ export default function StatisticsScreen() {
                     keyExtractor={(item) => item.id.toString()}
                     style={styles.list}
                     showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={handleRefresh}
+                            colors={['#769678']} // 设置刷新指示器的颜色
+                            tintColor="#769678" // iOS下刷新指示器的颜色
+                        />
+                    }
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
                             <Feather name="inbox" size={50} color="#ddd" />
@@ -595,10 +620,10 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     headerGradient: {
-        height: 120,
+        height: 80,
         justifyContent: 'flex-start',
         alignItems: 'center',
-        paddingTop: 30,
+        paddingTop: 40,
     },
     headerContainer: {
         flexDirection: 'row',
